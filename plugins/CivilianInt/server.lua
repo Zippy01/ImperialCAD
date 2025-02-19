@@ -5,7 +5,7 @@ AddEventHandler("ImperialCAD:getCivData", function(ssn)
         ["Content-Type"] = "application/json", 
         ["APIKEY"] = GetConvar("imperialAPI", ""), 
     }
-    local url = "https://imperialcad.app/version-test/api/1.1/wf/getcivdata"
+    local url = "https://imperialcad.app/api/1.1/wf/getcivdata"
     local data = {
         ssn = ssn,
         commId = GetConvar("imperial_community_id", "") 
@@ -74,7 +74,7 @@ AddEventHandler("ImperialCAD:registerVehicleToCAD", function(ssn, vehicleModelNa
         ["APIKEY"] = apiKey
     }
 
-    PerformHttpRequest("https://imperialcad.app/version-test/api/1.1/wf/registerVehicle", 
+    PerformHttpRequest("https://imperialcad.app/api/1.1/wf/registerVehicle", 
         function(statusCode, response, headers)
             if statusCode == 200 then
                 local responseData = json.decode(response)

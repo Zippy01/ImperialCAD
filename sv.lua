@@ -21,7 +21,7 @@ local function getVersionFromManifest()
 end
 
 local currentVersion = getVersionFromManifest()  -- Get the current version from fxmanifest.lua
-local versionUrl = 'https://raw.githubusercontent.com/username/repository/branch/version.json'  -- URL to your version file
+local versionUrl = 'https://raw.githubusercontent.com/Zippy01/ImperialCAD/main/version.json'  -- URL to your version file
 
 function checkForUpdates()
     local currentVersion = getVersionFromManifest()  -- Dynamically get the version

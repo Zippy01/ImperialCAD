@@ -4,7 +4,7 @@ Config = {}
 Config.debug = true
 
 --Framework questions, if you check something that doesnt apply, itll throw alot of errors.
-Config.isQB = false -- not started
+Config.isQB = false -- not finished [Currently chacters are created and deleted in CAD in junction with QB-Multichacter]
 Config.isESX = false -- not started
 Config.isND = false -- not started
 
