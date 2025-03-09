@@ -7,6 +7,8 @@ ImperialCAD is a comprehensive integration designed to enhance role-playing in F
 - **Ingame Civilian Management & Features**
 - **Ingame Emergency Services & Features**
 - **Ingame ImperialCAD Tablet**
+- **Over 15+ Devoloper Exports & Events**
+- **Ingame Framework Integration for Nat2k15 & QB Core**
 
 ## Installation
 1. Download the files from the GitHub repository.
