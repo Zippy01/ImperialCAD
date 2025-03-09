@@ -33,22 +33,25 @@ setr imperialAPI "API_Secret_Key_HERE"
 - **DriversLic**: Adds a realistic touch for managing driver's licenses.
 [DriversLic GitHub](https://github.com/Zippy01/DriversLic)
 
-### Commands
-## Civilian
+## Commands
+### Civilian
 - `/setciv <SSN>` - Activates the civilian profile linked to the SSN.
 - `/getciv` - Shows the active civilian profile.
 - `/clearciv` - Clears the current civilian profile.
 - `/regveh` - Registers the vehicle you are currently in.
 
-## Tablet
+### Tablet
 - `/tablet` - Toggles the virtual tablet on or off.
 
-## Emergency
+### Emergency
 - `/911 <description>` - Reports an emergency with a description.
 - `/panic` - Activates a panic alert.
 - `/rplate <plate>` - Retrieves information about a vehicle plate.
 - `/ts <details>` - Initiates a traffic stop.
 - `/attach <callnum>` - Attaches to an ongoing call.
 
-# Contributing
+## Contributing
 Please fork the repository, make changes, and submit a pull request if you wish to contribute.
+
+## License
+This script is owned by Imperial Solutions. Unauthorized copying, distribution, or use of this script without explicit permission is prohibited and may lead to legal repercussions.
