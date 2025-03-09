@@ -18,6 +18,128 @@ if Config.isQB then
     
     local QBCore = exports['qb-core']:GetCoreObject({'Functions'})
 
+-- Hook into the player character load event
+RegisterNetEvent('qb-multicharacter:server:loadUserData')
+AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
+    local src = source
+    local discordId = getDiscordId(src)
+
+    if Config.debug then
+        print("✅ QBCore Load User Detected, Loading Character Data: " .. json.encode(cData) .. " | Source: " .. src)
+    end
+
+    local charinfo = cData.charinfo
+    local fname = charinfo.firstname or "N?A"
+    local lname = charinfo.lastname or "N?A"
+    local gender = charinfo.gender or "N?A"
+    local dob = charinfo.birthdate or "N?A"
+    local phone = charinfo.phone or "N?A"
+
+    -- Extract required values
+    local citizenid = cData.citizenid
+    local commId = GetConvar("imperial_community_id", "")
+
+    if not citizenid or citizenid == "" then
+        print("❌ ERROR: Citizen ID is missing!")
+        return
+    end
+
+    if not commId or commId == "" then
+        print("❌ ERROR: Community ID is missing! Check your server config.")
+        return
+    end
+
+    -- Check if character exists in CAD
+    exports["ImperialCAD"]:GetCharacter(citizenid, commId, function(success, resultData)
+        if success then 
+            print("✅ Character Data Found in CAD for CitizenID: " .. citizenid)
+            if Config.debug then
+                print("Result Data: " .. json.encode(resultData))
+            end
+
+            local data = {
+                ssn = resultData.ssn,
+                name = resultData.Name,
+                address = resultData.address,
+                age = resultData.age
+            }
+
+            TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
+
+        else 
+
+            if Config.QBRegCurrent then -- If QBRegCurrent is true then
+
+                if Config.debug then
+            print("⚠️ Character NOT found in CAD. Creating new entry...")
+                end
+
+            else -- If QBRegCurrent is not true then (false)
+
+                if Config.debug then
+            print("⚠️ Character NOT found in CAD. Will not Create new entry config is set to false")
+                end
+
+            return end
+
+            if gender == 0 then
+                gender = "MALE"
+            elseif gender == 1 then
+                gender = "FEMALE"
+            end
+
+            
+            -- If character isnt found, create a new one
+            exports["ImperialCAD"]:NewCharacter({
+                users_discordID = discordId,
+                Fname = fname,
+                Mname = "",
+                Lname = lname,
+                Birthdate = dob,
+                race = "nil",
+                hairC = "nil",
+                eyeC = "nil",
+                height = "6'",
+                weight = "150",
+                postal = nil,
+                address = "nil",
+                gender = gender,
+                city = "nil",
+                county = "nil",
+                phonenum = phone,
+                dlstatus = "none",
+                citizenid = citizenid
+            }, function(createSuccess, createResult)
+                if createSuccess then
+                    print("✅ New Character Created in CAD for CitizenID: " .. citizenid)
+                    if Config.debug then
+                        print("Result Data: " .. json.encode(createResult))
+                    end
+
+                    local eventdata = json.decode(createResult)
+
+                    local data = {
+                        ssn = eventdata.response.ssn,
+                        name = eventdata.response.name,
+                        address = "Unkown Address",
+                        age = eventdata.response.age
+                    }
+        
+                    TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
+
+                else
+                    print("⚠️ ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
+                end
+
+            end)
+            
+        end
+
+
+
+    end)
+end)
+
     -- Hook into the character creation event
     RegisterNetEvent('qb-multicharacter:server:createCharacter')
     AddEventHandler('qb-multicharacter:server:createCharacter', function(cData)
@@ -46,9 +168,9 @@ if Config.isQB then
             local account = cData.account
     
             if gender == 0 then
-                gender = "male"
+                gender = "MALE"
             elseif gender == 1 then
-                gender = "female"
+                gender = "FEMALE"
             end
 
             if Config.debug then
@@ -84,6 +206,21 @@ if Config.isQB then
             }, function(success, resultData)
                 if success then 
                     print("✅ Character Created in CAD")
+                    if Config.debug then
+                        print("Result Data: " .. json.encode(resultData))
+                    end
+
+                    local eventdate = json.decode(resultData)
+
+                    local data = {
+                        ssn = eventdate.response.ssn,
+                        name = eventdate.response.name,
+                        address = "Unkown Address",
+                        age = eventdate.response.age
+                    }
+        
+                    TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
+
                 else 
                     print("⚠️ ERROR: Could not create character in CAD.")
                 end
@@ -115,4 +252,260 @@ if Config.isQB then
         end)
     end)
 
+    RegisterNetEvent('ImperialCAD:CreateVehicle')
+    AddEventHandler('ImperialCAD:CreateVehicle', function(data, source)
+        local src = source
+        local discordId = getDiscordId(src)
+        local vehicle = data.vehicle
+        local plate = data.plate
+        local color = data.color
+        local make = data.make
+
+        if Config.debug then
+            print("✅ Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
+        end
+
+        exports["ImperialCAD"]:CreateVehicle({
+            ssn = data.ssn,
+            model = data.vehicle,
+            plate = data.plate,
+            year = "2015",
+            make = make,
+            color = color
+        }, function(success, resultData)
+            if success then 
+                print("✅ Vehicle registered successfully to CAD.")
+            end
+        end)
+
+    end)
+
+    --[[                                                                                        NEEDS TO BE FINISHED, MAYBE REPLACED WITH MY FORKED VERSION OF PS
+    RegisterNetEvent('police:client:policeAlert', function(coords, text)
+        AddEventHandler('police:client:policeAlert', function(coords, text)
+            local street1, street2 = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+            local street1name = GetStreetNameFromHashKey(street1)
+            local street2name = GetStreetNameFromHashKey(street2)
+
+            exports["ImperialCAD"]:NewCall({
+                users_discordID = getDiscordId(source),
+                street = street1name,
+                cross_street = street2name,
+                postal = exports["ImperialLocation"]:getPostal(),
+                city = exports["ImperialLocation"]:getCity(),
+                county = exports["ImperialLocation"]:getCounty(),
+                info = text,
+                nature = "Local 911 Caller",
+                status = "ACTIVE",
+                priority = 3,
+            }, function(success, resultData)S
+                if success then 
+                    print("✅ Call Created in CAD by QB Alerts")
+                    if Config.debug then
+                        print("Call Data: " .. json.encode(resultData))
+                    end
+                else
+                    print("⚠️ ERROR: Could not create call in CAD for QB Alerts")
+                end
+            end)
+        end)
+    end)
+    --]]
+
 end
+
+ -- NAT2k15 Integration
+if Config.isNAT2k15 then
+    
+    FWN = Config.resourceName
+    NAT = exports[FWN]:getServerFunctions()    
+
+-- Hook into the player character load event
+RegisterNetEvent("NAT2K15:CHECKSQL")
+AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_name, twt, dept, dob, gender, data, clientFramework)
+    local src = source
+    local discordId = getDiscordId(src)
+
+    if Config.debug then
+        print("✅ NatFW Load User Detected, Loading Character Data: " .. json.encode(data) .. " | Source: " .. src)
+    end
+
+    local charinfo = data
+    local fname = first_name
+    local lname = last_name
+    local gender = gender
+    local dob = dob
+    local phone = ""
+
+    -- Extract required values
+    local citizenid = data.char_id
+    local commId = GetConvar("imperial_community_id", "")
+
+    if not citizenid or citizenid == "" then
+        print("❌ ERROR: Citizen ID is missing!")
+        return
+    end
+
+    if not commId or commId == "" then
+        print("❌ ERROR: Community ID is missing! Check your server config.")
+        return
+    end
+
+    -- Check if character exists in CAD
+
+    if Config.debug then
+        print("Checking for character in CAD with CitizenID: " .. citizenid)
+    end
+
+    exports["ImperialCAD"]:GetCharacter(citizenid, commId, function(success, resultData)
+        if success then 
+            print("✅ Character Data Found in CAD for CitizenID: " .. citizenid)
+            if Config.debug then
+                print("Result Data: " .. json.encode(resultData))
+            end
+        else 
+            print("⚠️ Character NOT found in CAD. Creating new entry...")
+
+            if gender == "Male" then
+                gender = "MALE"
+            elseif gender == "Female" then
+                gender = "FEMALE"
+            end
+
+            
+            -- If character isnt found, create a new one
+            exports["ImperialCAD"]:NewCharacter({
+                users_discordID = discordId,
+                Fname = fname,
+                Mname = "",
+                Lname = lname,
+                Birthdate = dob,
+                race = "nil",
+                hairC = "nil",
+                eyeC = "nil",
+                height = "6'",
+                weight = "150",
+                postal = nil,
+                address = "nil",
+                gender = gender,
+                city = "nil",
+                county = "nil",
+                phonenum = phone,
+                dlstatus = "none",
+                citizenid = citizenid
+            }, function(createSuccess, createResult)
+                if createSuccess then
+                    print("✅ New Character Created in CAD for CitizenID: " .. citizenid)
+                    if Config.debug then
+                        print("Result Data: " .. json.encode(createResult))
+                    end
+                else
+                    print("⚠️ ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
+                end
+            end)
+            
+        end
+    end)
+end)
+
+    -- Hook into the character creation event // pointless since the character is selected or loaded after created
+
+   --[[ RegisterNetEvent("NAT2K15:CREATECHARCTER") -- Character is not set after created, so we cant grab the charid
+    AddEventHandler("NAT2K15:CREATECHARCTER", function(first, last, twt, gender, dob, dept, data)
+        local src = source
+        local discordId = getDiscordId(src)
+    
+       if Config.debug then
+        print("Received Character Data (Pre-Delay): " .. json.encode(data))
+       end
+
+        -- Wait a few seconds for the data to be properly created
+        Wait(3000)  -- 3 seconds
+    
+        -- Fetch the updated player data from QBCore
+        local Player = NAT.getPlayer(src)
+    
+        if Player then
+            local citizenid = Player.charid
+            local firstname = Player.first
+            local lastname = Player.last
+            local birthdate = Player.dob
+            local gender = Player.gender
+    
+            if gender == "Male" then
+                gender = "MALE"
+            elseif gender == "Female" then
+                gender = "FEMALE"
+            end
+
+            if Config.debug then
+            print("✅ Character Created After Delay:")
+            print("Citizen ID: " .. citizenid)
+            print("Discord ID: " .. discordId)
+            print("First Name: " .. firstname)
+            print("Last Name: " .. lastname)
+            print("Birthdate: " .. birthdate)
+            print("Gender: " .. gender)
+            end
+        
+            -- Call the NewCharacter function to send data to the API
+            exports["ImperialCAD"]:NewCharacter({
+                users_discordID = discordId,
+                Fname = firstname,
+                Mname = "",
+                Lname = lastname,
+                Birthdate = birthdate,
+                race = "nil",
+                hairC = "nil",
+                eyeC = "nil",
+                height = "6'",
+                weight = "150",
+                postal = nil,
+                address = "nil",
+                gender = gender,
+                city = "nil",
+                county = "nil",
+                phonenum = "",
+                dlstatus = "none",
+                citizenid = citizenid
+            }, function(success, resultData)
+                if success then 
+                    print("✅ Character Created in CAD")
+                    if Config.debug then
+                        print("Result Data: " .. json.encode(resultData))
+                    end
+                else 
+                    print("⚠️ ERROR: Could not create character in CAD.")
+                end
+            end)
+        else
+            print("⚠️ ERROR: Could not retrieve player data after delay!")
+        end
+    end)
+    --]]
+
+    -- Hook into the character deletion event
+    RegisterNetEvent("NAT2K15:DELETEUSER")
+    AddEventHandler("NAT2K15:DELETEUSER", function(data)
+        local src = source
+        local discordId = getDiscordId(src)
+
+        local citizenid = data.char_id
+
+        if Config.debug then
+            print("Received Character Deletion Request: " .. citizenid)
+        end
+    
+        exports["ImperialCAD"]:DeleteCharacter({
+            users_discordID = discordId,
+            citizenid = citizenid
+        }, function(success, resultData)
+            if success then 
+                print("✅ Character was deleted in CAD")
+            else 
+                    print("⚠️ ERROR: Could not delete character in CAD.")
+            end
+        end)
+    end)
+
+end -- end main

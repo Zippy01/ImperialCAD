@@ -8,18 +8,25 @@ local function checkConvar(name, description)
     if not value or value == "" then
         error(string.format("Could not find required Convar '%s' for %s.", name, description))
     end
-    print(string.format("%s '%s' found.", description, name))
 end
 
 checkConvar("imperial_community_id", "ImperialCAD Community ID")
 checkConvar("imperialAPI", "Imperial API key")
 
-local function performAPIRequest(url, data, headers, callback)
+local function performAPIRequest(url, method, data, headers, callback) 
+    method = method:upper() -- Ensure method is uppercase (e.g., "GET" or "POST")
+    
+    if method == "GET" then
+        data = "" -- GET requests typically do not send a request body
+    else
+        data = json.encode(data) -- Encode data for POST (or PUT/PATCH if needed)
+    end
+
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders)
         if errorCode ~= 200 then
             print("^1[ERROR]^7 HTTP Error Code: " .. errorCode)
             if callback then
-                callback(false, "^1[ERROR]^7 request failed with code: " .. errorCode)
+                callback(false, "^1[ERROR]^7 Request failed with code: " .. errorCode)
             end
             return
         end
@@ -27,16 +34,16 @@ local function performAPIRequest(url, data, headers, callback)
         if callback then
             callback(true, resultData)
         end
-        
+
         if Config.debug then
             print("Result Data: " .. resultData) 
         end
 
-    end, 'POST', json.encode(data), headers)
+    end, method, data, headers) 
 end
 
 function NewCharacter(data, callback)
-    local data = {
+    local requestData = {
         commId = GetConvar("imperial_community_id", ""),
         users_discordID = data.users_discordID,
         Fname = data.Fname,
@@ -61,7 +68,7 @@ function NewCharacter(data, callback)
         ["Content-Type"] = "application/json",
         ["APIKEY"] = GetConvar("imperialAPI", "")
     }
-    performAPIRequest("https://imperialcad.app/api/1.1/wf/NewCharacter", data, headers, callback)
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/NewCharacter", "POST", requestData, headers, callback)
     
     if Config.debug then
        print("[ImperialExport] Attemping to create a new civilian CAD character!")
@@ -69,7 +76,7 @@ function NewCharacter(data, callback)
 end
 
 function DeleteCharacter(data, callback)
-    local data = {
+    local requestData = {
         commId = GetConvar("imperial_community_id", ""),
         users_discordID = data.users_discordID,
         citizenid = data.citizenid
@@ -78,12 +85,72 @@ function DeleteCharacter(data, callback)
         ["Content-Type"] = "application/json",
         ["APIKEY"] = GetConvar("imperialAPI", "")
     }
-    performAPIRequest("https://imperialcad.app/api/1.1/wf/DeleteCharacter", data, headers, callback)
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/DeleteCharacter", "POST", requestData, headers, callback)
     
     if Config.debug then
        print("[ImperialExport] Attemping to delete civilian CAD character!")
     end
 end
 
+function GetCharacter(charid, commId, callback)
+
+    if not charid or charid == "" then
+        print("❌ Invalid Character ID. It must not be empty.")
+        if callback then callback(false, "Invalid Character ID") end
+        return
+    end
+
+    if not commId or commId == "" then
+        print("❌ Invalid Community ID. It must not be empty.")
+        if callback then callback(false, "Invalid Community ID") end
+        return
+    end
+
+    local url = string.format(
+        "http://imperialcad.app/api/1.1/wf/GetCharacter?charid=%s&commId=%s",
+        charid,
+        commId
+    )
+
+    performAPIRequest(url, "GET", nil, nil, function(success, response)
+        if success then
+            local data = json.decode(response)
+            if data.status == "success" then
+                print("✅ Character retrieved: " .. json.encode(data.response))
+                if callback then callback(true, data.response) end
+            else
+                print("❌ Character not found.")
+                if callback then callback(false, "Character not found.") end
+            end
+        else
+            print("❌ API Request Failed: " .. response)
+            if callback then callback(false, response) end
+        end
+    end)
+end
+
+function CreateVehicle(data, callback)
+    local requestData = {
+        commId = GetConvar("imperial_community_id", ""),
+        ssn = data.ssn,
+        vehicleModel = data.model,
+        plate = data.plate,
+        year = data.year or "2015",
+        make = data.make or "UNKNOWN",
+        color = data.color
+    }
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["APIKEY"] = GetConvar("imperialAPI", "")
+    }
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/registerVehicle", "POST", requestData, headers, callback)
+    
+    if Config.debug then
+       print("[ImperialExport] Attemping to reigster " .. data.plate .. " to CAD!")
+    end
+end
+
+exports('GetCharacter', GetCharacter)
 exports('NewCharacter', NewCharacter)
 exports('DeleteCharacter', DeleteCharacter)
+exports('CreateVehicle', CreateVehicle)

@@ -30,9 +30,9 @@ function checkForUpdates()
         if err == 200 then  
             local data = json.decode(responseText)
             if data and data.latestVersion and data.latestVersion ~= currentVersion then
-                print('[V' .. currentVersion .. '] Update available! Please download the latest version: ' .. data.latestVersion)
+                print('[Current Version: ' .. currentVersion .. '] Update available! Please download the latest version: ' .. data.latestVersion)
             else
-                print('You are running the latest version of the script.')
+                print('ImperialCAD is up to date!')
             end
         else
             print('Failed to check for updates.')
@@ -66,7 +66,7 @@ AddEventHandler('playerDropped', function(reason, resourceName, clientDropReason
         print("^3[WARN]^7 Discord ID not found for " .. playerName .. "Cannot attempt cleanup")
      else
         if Config.debug then
-        print(discordId .. " This is what is trying, ig")
+        print("Attempting to mark "..playerName.." off duty in cad, using the discord id "..discordId)
         end
 
      exports["ImperialCAD"]:Booter({
@@ -75,11 +75,11 @@ AddEventHandler('playerDropped', function(reason, resourceName, clientDropReason
         if success then
             local apires = json.decode(resultData)
             if Config.debug then
-            print("Player was booted from CAD")
+            print("[ImperialCleanup] Player was successfully marked off duty, and cleaned up in the CAD")
             end
         else
             if Config.debug then
-            print("Imperial CAD did not clean up this player, Is the discord ID verified?")
+            print("[ImperialCleanup] Unable to mark user off duty, This player might not be logged in")
             end
         end
      end)
@@ -90,7 +90,7 @@ RegisterNetEvent('ImperialCAD:New911')
 AddEventHandler('ImperialCAD:New911', function(callData)
 
     if not callData.name or not callData.street or not callData.crossStreet or not callData.postal or not callData.info then
-        print("Error: Missing required call data.")
+        print("[Imperial911] Missing required call data to create a new 911 call, Will not create.")
         return  
     end
 
@@ -104,9 +104,9 @@ AddEventHandler('ImperialCAD:New911', function(callData)
         county = callData.county
     }, function(success, resultData)
         if success then 
-            print("911 Call Was sent to Emergency Services!")
+            print("[Imperial911] 911 Call was successfully created")
             else 
-                print("911 could not be sent.")
+                print("[Imperial911] 911 Call tried but failed")
             end
     end)
 end)
@@ -116,8 +116,12 @@ RegisterNetEvent('ImperialCAD:CheckPlate')
 AddEventHandler('ImperialCAD:CheckPlate', function(callData)
     local src = source
 
+    if Config.debug then
+        print("[ImperialRplate] Checking plate: " .. callData.plate.." on the server side")
+    end
+
     if not callData.plate then
-        print("Error: Missing required plate")
+        print("[ImperialRplate] Request made without plate, killing early")
         return
     end
 
@@ -125,49 +129,62 @@ AddEventHandler('ImperialCAD:CheckPlate', function(callData)
         plate = callData.plate
     }, function(success, resultData)
         if not success or not resultData then
-            Notify("Error: We couldnt find this plate, its likely not registered", src)
-            return
+            Notify(""..callData.plate.." Was ran without a successful result, is it registered?", src)
         end
 
         local data = json.decode(resultData)
-        if not data or data.status ~= "success" then
-            print("Error: Invalid API response or status not successful.")
+        if not data then
+            print("[ImperialRplate] Invalid API response, Killing early")
             return
         end
 
         local response = data.response
+        local messages = {}
 
-        if success and resultData then
-            Notify("The following flags/alerts where found for plate: " .. response.plate, src)
+        if success and resultData then 
+            Notify("The following flags/alerts where found for plate: " .. response.plate, src) -- @TODO
         end
 
+        if not success or not resultData then
+            table.insert(messages, "Could not find vehicle with the plate: "..callData.plate)
+        end
+
+        if success then -- If api returns success then check the actual return
+
         if response.stolen then
-            Notify("Alert: Vehicle reported STOLEN", src)
+            table.insert(messages, "Stolen Vehicle")
         end
 
         if not response.insurance then
-            Notify("Warning: No insurance found", src)
+            table.insert(messages, "No Insurance")
         end
 
         if response.insurance and response.insurance_status ~= "ACTIVE" then
-            Notify("Warning: Vehicle insurance is " .. response.insurance_status, src)
+            table.insert(messages, "Invalid Insurance")
         end
 
         if response.business then
-            Notify("Note: Vehicle is registered to a business.", src)
+            table.insert(messages, "Commercial Vehicle")
         end
 
         if response.reg_status ~= "ACTIVE" then
-            Notify("Attention: Vehicle registration is " .. response.reg_status, src)
+            table.insert(messages, "Invalid Vehicle registration")
         end
 
         if response.owner_wanted then
-            Notify("Alert: Owner is wanted by authorities.", src)
+            table.insert(messages, "Owner Wanted")
         end
 
         if response.owner_dl_status ~= "ACTIVE" then
-            Notify("Alert: Owners License is " .. response.owner_dl_status, src)
+            table.insert(messages, "Invalid license")
         end
+
+    end -- end of the addtional checks
+
+    if #messages > 0 then
+        TriggerClientEvent('ImperialCAD:Client:Notify', source, messages)
+    end
+    
     end)
 end)
 end
@@ -299,15 +316,19 @@ AddEventHandler("ImperialCAD:911Blip", function(coords)
      
      if success then
     for _, playerId in ipairs(OnDutyUnitsFound) do
+
            if Config.debug then
-           print("Got a success, Proceeding with blips")
+           print("We found ImperialDuty, Proceeding with blips")
            end
+
         TriggerClientEvent("Imperial:911BlipForOnduty", playerId, coords)
     end
     else
+
            if Config.debug then
            print("Couldnt find ImperialDuty, proceeding without blip.")
            end
+
     end
 
 end)

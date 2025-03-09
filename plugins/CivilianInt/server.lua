@@ -45,7 +45,6 @@ AddEventHandler("ImperialCAD:registerVehicleToCAD", function(ssn, vehicleModelNa
     local src = source
     local commId = GetConvar("imperial_community_id", "")
     local apiKey = GetConvar("imperialAPI", "")
-    
 
     if not commId or commId == "" then
         TriggerClientEvent("notify", src, "Community ID is not set. Cannot proceed with registration.")

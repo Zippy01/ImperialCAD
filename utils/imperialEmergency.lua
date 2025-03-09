@@ -17,11 +17,17 @@ checkConvar("imperialAPI", "Imperial API key")
 local function performAPIRequest(url, data, headers, callback)
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders)
         if errorCode ~= 200 then
-            print("^1[ERROR]^7 HTTP Error Code: " .. errorCode)
-            if callback then
-                callback(false, "^1[ERROR]^7 request failed with code: " .. errorCode)
+
+            if Config.debug then
+            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code: " .. errorCode)
             end
+
+            if callback then
+                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: " .. resultData)
+            end
+
             return
+
         end
 
         if callback then

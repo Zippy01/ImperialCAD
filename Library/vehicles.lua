@@ -148,5 +148,5 @@ local vehicleMakes = {
 
 
 function GetVehicleMakeName(vehicleModelName)
-    return vehicleMakes[vehicleModelName] or "Unknown"
+    return vehicleMakes[vehicleModelName] or nil
 end

@@ -10,7 +10,6 @@ AddEventHandler('playerSpawned', function()
     if (ssn and #ssn > 8) and name and age and address and (commId == communityid) then
         TriggerEvent("notify", "Your active civilian profile: " .. name)
     else
-
         TriggerEvent("notify", "You do not have an active civilian profile. Use /setciv to set one.")
     end
 end)
@@ -87,14 +86,19 @@ RegisterCommand("regveh", function(source, args, rawCommand)
             local plate = GetVehicleNumberPlateText(vehicle)
 
             local colorName = GetVehicleColorName(vehicle)
-            local makeName = GetVehicleMakeName(vehicleModelName)
+            local makeName = GetVehicleMakeName(string.upper(vehicleModelName))
             
             if vehicleModelName == "CARNOTFOUND" or vehicleModelName == nil then
                 vehicleModelName = "UNKNOWN"  
                 TriggerEvent("notify", "Model Unknown, Proceeding anyways...")
             end
 
-            TriggerServerEvent("ImperialCAD:registerVehicleToCAD", ssn, vehicleModelName, plate, colorName, makeName)
+            local primaryColor, _ = GetVehicleColours(vehicle)
+
+            if Config.debug then
+            print("Color ID for this request is " .. primaryColor)
+            end
+            --TriggerServerEvent("ImperialCAD:registerVehicleToCAD", ssn, vehicleModelName, plate, colorName, makeName)
             TriggerEvent("notify", "Registration has been sent to the DMV.")
         else
             TriggerEvent("notify", "You must set an active civilian before registering a vehicle.")

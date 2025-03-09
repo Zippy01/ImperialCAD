@@ -16,11 +16,12 @@ Citizen.CreateThread(function()
     end
 end)
 
+if Config.Allow911Command then
 TriggerEvent('chat:addSuggestion', '/911', 'Call Emergency Services', {
     { name = "Information", help = "Description of your call." }
 })
 
-RegisterCommand('911', function(source, args, rawCommand)
+RegisterCommand('911', function(args)
     local message = table.concat(args, " ")
     local playerPed = PlayerPedId()
     local coords = GetEntityCoords(playerPed)
@@ -56,19 +57,19 @@ RegisterCommand('911', function(source, args, rawCommand)
     }
 
     if Config.debug then
-        print("Sending client data to ImperialDuty")
+        print("[Imperial911] Is creating a new 911 Chat Message")
     end
      
     TriggerServerEvent('Imperial:911ChatMessage', callData.name, callData.street, message, callData.crossStreet, callData.postal)
 
     if Config.debug then
-        print('we told it to create the call')
+        print('[Imperial911] Is creating a new 911 in CAD')
     end
 
     TriggerServerEvent('ImperialCAD:New911', callData)
 
     if Config.debug and Config.callBlip then
-        print("telling it to place a blip for the 911 call")    
+        print('[Imperial911] Is creating a new 911 blip')    
     end
 
     if Config.callBlip then
@@ -76,6 +77,7 @@ RegisterCommand('911', function(source, args, rawCommand)
     end
     
 end, false)
+end
 
 if Config.PlateThroughChat then
 
@@ -87,7 +89,14 @@ RegisterCommand('rplate', function(source, args, rawCommand)
     local plate = table.concat(args, " ")
 
     if plate == nil or plate == "" then
-        Notify("You need to include a ~o~plate!")
+        print('plate not in command')
+        TriggerEvent('ox_lib:alertDialog', {
+            header = "No Last Idea",
+            content = "There is no last idea stored.",
+            centered = true,
+            cancel = false,
+            size = 'md'
+        })
         return
     end
 
@@ -96,10 +105,11 @@ RegisterCommand('rplate', function(source, args, rawCommand)
     }
 
     if Config.debug then
-        print("Chat command for plate is Sending client data to server")
+        print("[Rplate] Sending a plate check to the server side.")
     end
 
     TriggerServerEvent('ImperialCAD:CheckPlate', callData)
+    print("[Rplate] Sent a plate check to the server side.")
 end, false)
 end
 
@@ -117,18 +127,19 @@ RegisterCommand('panic', function()
  if isPanic then
     isPanic = false
 
-    print("Clearing panic event, current panic for this user")
+    print("[Imperial-Panic] Clearing panic, Panic was true")
 
     TriggerServerEvent('ImperialCAD:ClearPanic', callData)
  else
     isPanic = true
 
-    print("Starting panic event, current panic for this user is")
+    print("[Imperial-Panic] Triggering panic, Panic was false")
 
     TriggerServerEvent('ImperialCAD:Panic', callData)
  end
 end, false)
 
+if Config.debug then
 RegisterCommand('testloc', function()
 local postalCode = exports['ImperialLocation']:getPostal()
 local cityName = exports['ImperialLocation']:getCity()
@@ -136,11 +147,12 @@ local countyName = exports['ImperialLocation']:getCounty()
 
 print("Current location:", postalCode, cityName, countyName)
     
-end, true)
+end, false)
+end
 
 if Config.TsThroughChat then
 
-    TriggerEvent('chat:addSuggestion', '/ts', 'Create a traffic stop in CAD', {
+    TriggerEvent('chat:addSuggestion', '/ts', 'Create a traffic stop in ImperialCAD', {
         { name = "Information", help = "Description of your traffic stop." }
     })
 
@@ -189,6 +201,11 @@ function Notify(message)
     AddTextComponentSubstringPlayerName(message);
     EndTextCommandThefeedPostMessagetext("CHAR_CALL911", "CHAR_CALL911", true, 1, "Imperial911", "Emergency Services");
 end
+
+RegisterNetEvent("ImperialCAD:Client:Notify")
+AddEventHandler("ImperialCAD:Client:Notify", function(messages)
+    Notify(messages)
+end)
 
 RegisterNetEvent("Imperial:911BlipForOnduty")
 AddEventHandler("Imperial:911BlipForOnduty", function(coords)
