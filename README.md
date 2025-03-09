@@ -1,59 +1,61 @@
 # ImperialCAD
 
 ## Description
-ImperialCAD is a comprehensive integration designed to enhance role-playing in FiveM by combining functionalities from civilian management, emergency services, and interactive devices into a single, streamlined system.
+ImperialCAD is an advanced FiveM integration that enhances role-playing by combining civilian management, emergency services, and device interaction into a cohesive system, designed to interface with the external ImperialCAD.app.
 
 ## Features
 - **Ingame Civilian Management & Features**
 - **Ingame Emergency Services & Features**
 - **Ingame ImperialCAD Tablet**
-- **Over 15+ Devoloper Exports & Events**
-- **Ingame Framework Integration for Nat2k15 & QB Core**
+- **Over 15+ Developer Exports & Events**
+- **Framework Integration for Nat2k15 & QB Core**
 
 ## Installation
-1. Download the files from the GitHub repository.
-2. Extract the folder into your `resources` directory in FiveM.
-3. Add `ensure ImperialCAD` to your server's `server.cfg` file.
+1. Download from the GitHub repository.
+2. Place the folder in your FiveM `resources` directory.
+3. Review and configure `config.lua` to your liking.
+3. Include `ensure ImperialCAD` in your `server.cfg`.
 
 ## Community Configuration
-The script requires a community ID and API Secret Key from Imperial CAD:
-- Locate your community ID in Admin Panel > Settings > Plugin.
-- Add these lines to the top of your server.cfg file:
+Required: a community ID and API Secret Key from Imperial CAD:
+- Find the community ID in Admin Panel > Settings > Plugin.
+- Add to `server.cfg`:
 
 ```
 setr imperial_community_id "COMMUNITY_ID_HERE" 
 setr imperialAPI "API_Secret_Key_HERE"
 ```
 
+
 ## Dependencies
-- **OXLib**: Required for core functionalities.
-- **ImperialLocation**: Essential for location-based services.
+- **OXLib**: Core functionality.
+- **ImperialLocation**: Location services.
 [ImperialLocation GitHub](https://github.com/Zippy01/ImperialLocation)
 
 ## Recommended Additional Resources
-- **ImperialDuty**: Enhances in-game alerts and emergency service functionalities.
-- **DriversLic**: Adds a realistic touch for managing driver's licenses.
+- **ImperialDuty**: Enhances in-game alerts.
+- **DriversLic**: Manages driver's licenses.
 [DriversLic GitHub](https://github.com/Zippy01/DriversLic)
 
 ## Commands
 ### Civilian
-- `/setciv <SSN>` - Activates the civilian profile linked to the SSN.
-- `/getciv` - Shows the active civilian profile.
-- `/clearciv` - Clears the current civilian profile.
-- `/regveh` - Registers the vehicle you are currently in.
+- `/setciv <SSN>`
+- `/getciv`
+- `/clearciv`
+- `/regveh`
 
 ### Tablet
-- `/tablet` - Toggles the virtual tablet on or off.
+- `/tablet`
 
 ### Emergency
-- `/911 <description>` - Reports an emergency with a description.
-- `/panic` - Activates a panic alert.
-- `/rplate <plate>` - Retrieves information about a vehicle plate.
-- `/ts <details>` - Initiates a traffic stop.
-- `/attach <callnum>` - Attaches to an ongoing call.
+- `/911 <description>`
+- `/panic`
+- `/rplate <plate>`
+- `/ts <details>`
+- `/attach <callnum>`
 
 ## Contributing
-Please fork the repository, make changes, and submit a pull request if you wish to contribute.
+Fork, modify, and submit pull requests to contribute.
 
 ## License
-This script is owned by Imperial Solutions. Unauthorized copying, distribution, or use of this script without explicit permission is prohibited and may lead to legal repercussions.
+Owned by Imperial Solutions. Unauthorized copying, distribution, or use without explicit permission is prohibited and may result in legal action.
