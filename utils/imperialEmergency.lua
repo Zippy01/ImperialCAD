@@ -23,7 +23,11 @@ local function performAPIRequest(url, data, headers, callback)
             end
 
             if callback then
+                if resultData then
                 callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: " .. resultData)
+                else
+                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
+                end
             end
 
             return
@@ -31,11 +35,15 @@ local function performAPIRequest(url, data, headers, callback)
         end
 
         if callback then
+            if resultData then
             callback(true, resultData)
+            else
+            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+            end
         end
         
         if Config.debug then
-            print("Result Data: " .. resultData) 
+            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. resultData) 
         end
 
     end, 'POST', json.encode(data), headers)
@@ -59,8 +67,9 @@ function Create911Call(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/911", data, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport] Attemping to create a 911 call!")
+       print("[Imperial_Export_Create911Call] Attemping to create a 911 call!")
     end
+
 end
 
 function DeleteCall(data, callback)
@@ -76,7 +85,7 @@ function DeleteCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/Calldelete", data, headers, callback)
 
     if Config.debug then
-    print("[ImperialExport] Attemping to delete a 911 call!")
+    print("[Imperial_Export_DeleteCall] Attemping to delete a 911 call!")
     end
 
 end
@@ -102,8 +111,9 @@ function CreateCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallCreate", data, headers, callback)
 
     if Config.debug then
-      print("[ImperialExport] Attemping to create a new call!")
+      print("[Imperial_Export_CreateCall] Attemping to create a new call!")
     end
+
 end
 
 function AttachCall(data, callback)
@@ -119,8 +129,9 @@ function AttachCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/AttachCall", data, headers, callback)
 
      if Config.debug then
-    print("[ImperialExport] Attemping to attach this user!")
+    print("[Imperial_Export_AttachCall] Attemping to attach this user!")
      end
+
 end
 
 function NewCallNote(data, callback)
@@ -136,8 +147,9 @@ function NewCallNote(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/callnote", data, headers, callback)
 
     if Config.debug then
-      print("[ImperialExport] Attemping to create a new call note!")
+      print("[Imperial_Export_NewCallNote] Attemping to create a new call note!")
     end
+
 end
 
 function Booter(data, callback)
@@ -156,8 +168,9 @@ function Booter(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/offduty", data, headers, callback)
 
     if Config.debug then
-      print("[ImperialExport] Attemping to boot a user from the cad!")
+      print("[Imperial_Export_Booter] Attemping to boot a user from the cad!")
     end
+
 end
 
 function Panic(data, callback)
@@ -174,7 +187,7 @@ function Panic(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/panic", data, headers, callback)
 
     if Config.debug then
-     print("[ImperialExport] Attemping to trigger a user panic in cad!")
+     print("[Imperial_Export_Panic] Attemping to trigger a user panic in cad!")
     end
 
 end
@@ -190,8 +203,9 @@ function ClearPanic(callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/clearpanic", data, headers, callback)
 
     if Config.debug then
-     print("[ImperialExport] Attemping to to clear a community panic")
+     print("[Imperial_Export_ClearPanic] Attemping to to clear a community panic")
     end
+
 end
 
 function CheckPlate(data, callback)
@@ -206,8 +220,9 @@ function CheckPlate(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/checkplate", data, headers, callback)
 
     if Config.debug then
-    print("[ImperialExport] Attempting to check the plate " .. data.plate)
+    print("[Imperial_Export_CheckPlate] Attempting to check the plate " .. data.plate)
     end
+
 end
 
 exports('Create911Call', Create911Call)

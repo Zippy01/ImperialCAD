@@ -40,7 +40,7 @@ AddEventHandler('qb-vehicleshop:client:buyShowroomVehicle', function(vehicleMode
         end
 
         if data.ssn then
-            -- TriggerServerEvent('ImperialCAD:CreateVehicle', data, src)  -- Uncomment this line when ready to use
+            TriggerServerEvent('ImperialCAD:CreateVehicle', data, src)
             TriggerEvent("notify", "Vehicle has been sent to the DMV.")
             if Config.debug then
             TriggerEvent("notify", vehicleModelName .. " has been sent to the DMV, " .. (colorName or "UNKNOWN") .. " is color and " .. (makeName or "UNKNOWN") .. " is make.")
