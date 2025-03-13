@@ -21,7 +21,7 @@ TriggerEvent('chat:addSuggestion', '/911', 'Call Emergency Services', {
     { name = "Information", help = "Description of your call." }
 })
 
-RegisterCommand('911', function(args)
+RegisterCommand('911', function(source, args)
     local message = table.concat(args, " ")
     local playerPed = PlayerPedId()
     local coords = GetEntityCoords(playerPed)
