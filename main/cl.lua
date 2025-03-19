@@ -196,16 +196,16 @@ if Config.TsThroughChat then
         end, false)
         end
 
+    RegisterNetEvent("ImperialCAD:Client:Notify")
+    AddEventHandler("ImperialCAD:Client:Notify", function(messages)
+         Notify(messages)
+    end)
+
 function Notify(message)
     BeginTextCommandThefeedPost("STRING");
     AddTextComponentSubstringPlayerName(message);
     EndTextCommandThefeedPostMessagetext("CHAR_CALL911", "CHAR_CALL911", true, 1, "Imperial911", "Emergency Services");
 end
-
-RegisterNetEvent("ImperialCAD:Client:Notify")
-AddEventHandler("ImperialCAD:Client:Notify", function(messages)
-    Notify(messages)
-end)
 
 RegisterNetEvent("Imperial:911BlipForOnduty")
 AddEventHandler("Imperial:911BlipForOnduty", function(coords)

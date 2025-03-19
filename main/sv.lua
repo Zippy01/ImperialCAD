@@ -17,7 +17,7 @@ local function getVersionFromManifest()
             end
         end
     end
-    return 'unknown' 
+    return 'unknown'
 end
 
 local currentVersion = getVersionFromManifest()
@@ -32,10 +32,10 @@ function checkForUpdates()
             if data and data.latestVersion and data.latestVersion ~= currentVersion then
                 print('[Current Version: ' .. currentVersion .. '] Update available! Please download the latest version: ' .. data.latestVersion)
             else
-                print('ImperialCAD is up to date!')
+                print('ImperialCAD V'..currentVersion..' is up to date!')
             end
         else
-            print('Failed to check for updates.')
+                print('Failed to check for updates.')
         end
     end, 'GET', '')
 end
