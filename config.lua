@@ -1,7 +1,7 @@
 Config = {}
 
 --This literally will just flood anything helpful for debugging, If your not debugging dont use it.
-Config.debug = true
+Config.debug = false
 
 ----QB Core Frame work, and its configuration - This is meant for base QBCore events, and functions.
 Config.isQB = false -- Vehicles, Characters

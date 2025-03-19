@@ -14,12 +14,12 @@ checkConvar("imperial_community_id", "ImperialCAD Community ID")
 checkConvar("imperialAPI", "Imperial API key")
 
 local function performAPIRequest(url, method, data, headers, callback) 
-    method = method:upper() -- Ensure method is uppercase (e.g., "GET" or "POST")
+    method = method:upper()
     
     if method == "GET" then
-        data = "" -- GET requests typically do not send a request body
+        data = ""
     else
-        data = json.encode(data) -- Encode data for POST (or PUT/PATCH if needed)
+        data = json.encode(data)
     end
 
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders)
