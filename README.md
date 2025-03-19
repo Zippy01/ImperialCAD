@@ -23,7 +23,7 @@ Required: a community ID and API Secret Key from Imperial CAD:
 
 ```
 setr imperial_community_id "COMMUNITY_ID_HERE" 
-setr imperialAPI "API_Secret_Key_HERE"
+set imperialAPI "API_Secret_Key_HERE"
 ```
 
 
