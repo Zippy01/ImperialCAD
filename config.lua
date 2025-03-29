@@ -2,14 +2,19 @@ Config = {}
 
 --This literally will just flood anything helpful for debugging, If your not debugging dont use it.
 Config.debug = false
+Config.DisableVersionCheck = false -- Why would you even do this? It disbales the version check on resource start
 
 ----QB Core Frame work, and its configuration - This is meant for base QBCore events, and functions.
 Config.isQB = false -- Vehicles, Characters
-Config.QBRegCurrent = false -- Literally will reigster a character when a previous is loaded (not created/deleted), as long as that unique citizen ID isnt already in the CAD.
+Config.QBRegCurrent = false -- Literally will register a character when a previous is loaded (not created/deleted), as long as that unique citizen ID isnt already in the CAD.
 
 --Nat2K15 Frame work, and its configuration
 Config.isNat2K15 = false
 Config.resourceName = "framework"
+
+----QBX Core Frame work, and its configuration - This is meant for base QBCore events, and functions.
+Config.isQBX = false -- NOT FINISHED
+Config.QBXRegCurrent = false -- NOT FINISHED
 
 --This will mark them off duty once they leave the game. (Requires a verfified discord ID, and they must be active within your community on the CAD)
 Config.cadkickonleave = true
@@ -18,7 +23,6 @@ Config.cadkickonleave = true
 Config.requireVerify = false -- NOT FINISHED
 
 --Should these chat commands exist:
-Config.PlateThroughChat = false -- this is broken atm, dont use it.
 Config.TsThroughChat = true
 Config.AttachThroughChat = true
 Config.Allow911Command = true -- This literally is for the /911 command, if you dont need it, disable it.

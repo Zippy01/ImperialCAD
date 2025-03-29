@@ -41,7 +41,10 @@ function checkForUpdates()
 end
 
 CreateThread(function()
+
+    if Config.DisableVersionCheck then return end -- If config is set to disable
     checkForUpdates()  -- Check for updates when the script starts
+
 end)
 
 --trys to find the discord ID
@@ -283,12 +286,97 @@ function Notify(message, playerId)
     })
 end
 
+RegisterNetEvent("ImperialCAD:Server:NewNotify")
+AddEventHandler("ImperialCAD:Server:NewNotify", function(callData)
+
+    local d = callData or {}
+    if not d then print("ImperialCAD Could not create a new dispatch, No callData was found. Returning early") return false end
+    local street = d.street or "Unknown"
+    local crossStreet = d.crossStreet or "N/A"
+    local postal = d.postal or "00000"
+    local city = d.city or "N/A"
+    local county = d.county or "N/A"
+    local nature = d.nature or "No Nature Provided"
+    local status = d.status or "ACTIVE"
+    local priority = d.priority or 2
+    if not d.cords or d.cords == "" then
+        print("ImperialCAD Could not create a new dispatch, No cords were found. Returning early")
+        return false
+    end
+    local cords = d.cords
+    local message = d.message or "No information provided"
+    local cmessage = d.cmessage or "No Information provided"
+    local job = d.job or "Unknown"
+
+    exports["ImperialCAD"]:CreateCall({
+        users_discordID = "",
+        street = street,
+        cross_street = crossStreet,
+        postal = postal,
+        city = city,
+        county = county,
+        info = message,
+        nature = nature,
+        status = status,
+        priority = priority
+    }, function(success, resultData)
+        if success then
+            local apires = json.decode(resultData)
+            if not apires or not apires.response or not apires.response.callId then
+                print("^1[API_ERROR]^7 Invalid response or call ID not found")
+                return false
+            end
+
+            local callNum = apires.response.callnum
+            print("New Dispatch CAD Call created successfully: Call ID -", callNum)
+
+            local chatMessage = {
+                multiline = true,
+                args = {
+                    "^8(ImperialCAD - New Call For Service)",
+                    "^7\nPostal: ^3" .. postal ..
+                    "^7\nStreet: ^3" .. street ..
+                    "^7\nCross Street: ^3" .. crossStreet ..
+                    "^7\nInformation: ^3" .. cmessage ..
+                    "^7\nCall Number: ^3" .. callNum
+                }
+            }
+
+            local successDuty, onDutyUnits = pcall(function()
+                if job == "LEO" then
+                    return exports["ImperialDuty"]:GetOnDutyLEOUnits()
+                elseif job == "FIRE" then
+                    return exports["ImperialDuty"]:GetOnDutyFireUnits()
+                else
+                    return exports["ImperialDuty"]:GetOnDutyUnits()
+                end
+            end)
+
+            if successDuty and onDutyUnits then
+                for _, playerId in ipairs(onDutyUnits) do
+                    TriggerClientEvent("chat:addMessage", playerId, chatMessage)
+                    TriggerClientEvent("Imperial:911BlipForOnduty", playerId, cords)
+                end
+                if Config.debug then print("Blips and messages sent to on-duty units.") end
+            else
+                TriggerClientEvent("chat:addMessage", -1, chatMessage)
+                if Config.debug then print("Duty unit fetch failed. Message sent to all.") end
+            end
+
+        else
+            print("New Imperial Dispatch call failed: "..resultData)
+        end
+    end)
+
+end)
+
+
 RegisterNetEvent("Imperial:911ChatMessage")
 AddEventHandler("Imperial:911ChatMessage", function(name, street, message, crossStreet, postal)
 
     local chatMessage = {
         multiline = true,
-        args = {"^8(Imperial911 - New Call For Service)",
+        args = {"^8(ImperialCAD - New Call For Service)",
             "\nName: ^3" .. name .. "^7\nPostal: ^3" .. postal .. "^7\nStreet: ^3" .. street .. 
             "^7\nCross Street: ^3" .. crossStreet .. "^7\nInformation: ^3" .. message
         }
