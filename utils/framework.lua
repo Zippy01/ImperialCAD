@@ -405,20 +405,17 @@ end)
 end -- end of nat
 
 if Config.isQBX then -- Start of QBX, nothing in this works if not QBX
-    
-    local QBCore = exports['qb-core']:GetCoreObject({'Functions'})
 
 -- Hook into the player character load event
-RegisterNetEvent('ImperialCAD:QBXFramework:loadCharacter')
-AddEventHandler('ImperialCAD:QBXFramework:loadCharacter', function(citizenId)
+AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
     local src = source
     local discordId = getDiscordId(src)
 
     if Config.debug then
-        print("✅ QBXCore Load User Detected, Requesting Character Data for: "..citizenId.." | Source: "..src)
+        print("✅ QBXCore Load User Detected, Requesting Character Data for Source: "..src)
     end
 
-    local cData = exports.qbx_core:GetPlayerByCitizenId(citizenId)
+    local cData = exports['qbx_core']:GetPlayerData()
 
     if Config.debug then
         print('Recieved character data for '..src.." character data is: "..json.encode(cData))
@@ -428,7 +425,7 @@ AddEventHandler('ImperialCAD:QBXFramework:loadCharacter', function(citizenId)
         print("Uhmmm, no information was found or the script failed. Returning instead")
     return end
 
-    local charinfo = cData.PlayerData.charinfo
+    local charinfo = cData.charinfo
     local fname = charinfo.firstname or "N?A"
     local lname = charinfo.lastname or "N?A"
     local gender = charinfo.gender or "N?A"
@@ -436,7 +433,7 @@ AddEventHandler('ImperialCAD:QBXFramework:loadCharacter', function(citizenId)
     local phone = charinfo.phone or "N?A"
 
     -- Extract required values
-    local citizenid = cData.PlayerData.citizenid
+    local citizenid = cData.citizenid
     local commId = GetConvar("imperial_community_id", "")
 
     if not citizenid or citizenid == "" then
@@ -541,8 +538,8 @@ AddEventHandler('ImperialCAD:QBXFramework:loadCharacter', function(citizenId)
 end)
 
     -- Hook into the character creation event
-    RegisterNetEvent('ImperialCAD:QBXFramework:CreateCharacter')
-    AddEventHandler('ImperialCAD:QBXFramework:CreateCharacter', function(newData)
+    RegisterNetEvent('ImperialCAD:CreateCharacter')
+    AddEventHandler('ImperialCAD:CreateCharacter', function(newData)
         local src = source
         local discordId = getDiscordId(src)
 
@@ -643,6 +640,22 @@ end)
                     print("⚠️ ERROR: Could not delete character in CAD.")
             end
         end)
+    end)
+
+    RegisterNetEvent('qbx_vehicleshop:server:buyShowroomVehicle')
+    AddEventHandler('qbx_vehicleshop:server:buyShowroomVehicle', function()
+        local src = source
+
+        if Config.debug then print("Received QBX create new vehicle, registering for .."..src) end
+        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', src)
+
+    end)
+    -- Very hacky lazy workaround - I need to improve this | Financing
+    RegisterNetEvent('qbx_vehicleshop:server:financeVehicle')
+    AddEventHandler('qbx_vehicleshop:server:financeVehicle', function(downPayment, paymentAmount, buyVehicle)
+        if Config.debug then print("Received QBX create new vehicle, finance") end
+        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', source)
+
     end)
 
     RegisterNetEvent('ImperialCAD:QBXFramework:CreateVehicle')

@@ -58,8 +58,11 @@ end --end of qb
 
 if Config.isQBX then
 
-    RegisterNetEvent('qbx_vehicleshop:server:buyShowroomVehicle')
-    AddEventHandler('qbx_vehicleshop:server:buyShowroomVehicle', function()
+    if Config.debug then print("Client FW script for qbx loaded") end
+
+    -- Very hacky lazy workaround - I need to improve this
+    RegisterNetEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle')
+    AddEventHandler('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', function(source)
     
         Citizen.Wait(2000)
     
