@@ -201,7 +201,7 @@ end)
                 city = "nil",
                 county = "nil",
                 phonenum = phone,
-                dlstatus = "none",
+                dlstatus = "VALID",
                 citizenid = citizenid
             }, function(success, resultData)
                 if success then 
