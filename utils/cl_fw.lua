@@ -62,10 +62,12 @@ if Config.isQBX then
 
     -- Very hacky lazy workaround - I need to improve this
     RegisterNetEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle')
-    AddEventHandler('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', function(source)
-    
-        Citizen.Wait(2000)
-    
+    AddEventHandler('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', function()
+        
+        if Config.debug then print("Client received showroom vehicle purchase event!") end
+        Citizen.Wait(3000)
+        TriggerEvent("notify", "Please do not leave your vehicle, Registering to ImperialCAD")
+
         local src = source
     
         local ped = PlayerPedId()
@@ -96,7 +98,7 @@ if Config.isQBX then
             end
     
             if data.ssn then
-                TriggerServerEvent('ImperialCAD:CreateVehicle', data, src)
+                TriggerServerEvent('ImperialCAD:QBXFramework:CreateVehicle', data, src)
                 TriggerEvent("notify", "Vehicle has been sent to the DMV.")
                 if Config.debug then
                 TriggerEvent("notify", vehicleModelName .. " has been sent to the DMV, " .. (colorName or "UNKNOWN") .. " is color and " .. (makeName or "UNKNOWN") .. " is make.")

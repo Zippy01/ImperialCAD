@@ -407,6 +407,7 @@ end -- end of nat
 if Config.isQBX then -- Start of QBX, nothing in this works if not QBX
 
 -- Hook into the player character load event
+RegisterNetEvent('QBCore:Server:OnPlayerLoaded')
 AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
     local src = source
     local discordId = getDiscordId(src)
@@ -415,7 +416,8 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
         print("✅ QBXCore Load User Detected, Requesting Character Data for Source: "..src)
     end
 
-    local cData = exports['qbx_core']:GetPlayerData()
+    local data = exports.qbx_core:GetPlayer(source)
+    local cData = data.PlayerData
 
     if Config.debug then
         print('Recieved character data for '..src.." character data is: "..json.encode(cData))
@@ -537,89 +539,6 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
     end)
 end)
 
-    -- Hook into the character creation event
-    RegisterNetEvent('ImperialCAD:CreateCharacter')
-    AddEventHandler('ImperialCAD:CreateCharacter', function(newData)
-        local src = source
-        local discordId = getDiscordId(src)
-
-        local cData = newData
-    
-       if Config.debug then
-        print("[ImperialCAD:CreateCharacter] Received Character Data: " .. json.encode(cData))
-       end
-
-       if not cData or cData == nil then
-        print("Character data was missing for this Create Character event. Ending early, wont register")
-        return end
-
-            local citizenid = cData.cid
-            local firstname = cData.firstname
-            local lastname = cData.lastname
-            local birthdate = cData.birthdate
-            local gender = cData.gender
-            local nationality = cData.nationality
-    
-            if gender == 0 then
-                gender = "MALE"
-            elseif gender == 1 then
-                gender = "FEMALE"
-            end
-
-            if Config.debug then
-            print("✅ Character Created After Delay:")
-            print("Citizen ID: " .. citizenid)
-            print("Discord ID: " .. discordId)
-            print("First Name: " .. firstname)
-            print("Last Name: " .. lastname)
-            print("Birthdate: " .. birthdate)
-            print("Gender: " .. gender)
-            end
-        
-            -- Call the NewCharacter function to send data to the API
-            exports["ImperialCAD"]:NewCharacter({
-                users_discordID = discordId,
-                Fname = firstname,
-                Mname = "",
-                Lname = lastname,
-                Birthdate = birthdate,
-                race = "nil",
-                hairC = "nil",
-                eyeC = "nil",
-                height = "6'",
-                weight = "150",
-                postal = nil,
-                address = "nil",
-                gender = gender,
-                city = "nil",
-                county = "nil",
-                phonenum = "",
-                dlstatus = "none",
-                citizenid = citizenid
-            }, function(success, resultData)
-                if success then 
-                    print("✅ Character Created in CAD")
-                    if Config.debug then
-                        print("Result Data: " .. json.encode(resultData))
-                    end
-
-                    local eventdate = json.decode(resultData)
-
-                    local data = {
-                        ssn = eventdate.response.ssn,
-                        name = eventdate.response.name,
-                        address = "Unkown Address",
-                        age = eventdate.response.age
-                    }
-        
-                    TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
-
-                else 
-                    print("⚠️ ERROR: Could not create character in CAD.")
-                end
-            end)
-    end)
-
     -- Hook into the character deletion event
     RegisterNetEvent('qbx_core:server:deleteCharacter')
     AddEventHandler('qbx_core:server:deleteCharacter', function(citizenid)
@@ -644,10 +563,9 @@ end)
 
     RegisterNetEvent('qbx_vehicleshop:server:buyShowroomVehicle')
     AddEventHandler('qbx_vehicleshop:server:buyShowroomVehicle', function()
-        local src = source
 
-        if Config.debug then print("Received QBX create new vehicle, registering for .."..src) end
-        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', src)
+        if Config.debug then print("Received QBX create new vehicle, registering for "..source) end
+        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', source)
 
     end)
     -- Very hacky lazy workaround - I need to improve this | Financing
