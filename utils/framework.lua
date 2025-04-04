@@ -560,7 +560,7 @@ end)
             end
         end)
     end)
-
+    -- Very hacky lazy workaround - I need to improve this | Purchasing
     RegisterNetEvent('qbx_vehicleshop:server:buyShowroomVehicle')
     AddEventHandler('qbx_vehicleshop:server:buyShowroomVehicle', function()
 
@@ -573,6 +573,20 @@ end)
     AddEventHandler('qbx_vehicleshop:server:financeVehicle', function(downPayment, paymentAmount, buyVehicle)
         if Config.debug then print("Received QBX create new vehicle, finance") end
         TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', source)
+
+    end)
+    --Another lazy hacky method, but vehicle financed by sales guy?
+    RegisterNetEvent('qbx_vehicleshop:server:sellfinanceVehicle')
+    AddEventHandler('qbx_vehicleshop:server:sellfinanceVehicle', function(downPayment, paymentAmount, vehicle, playerId)
+        if Config.debug then print("Received QBX create new vehicle, finance sell by player") end
+        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', playerId)
+
+    end)
+    --Another lazy hacky method, but vehicle purchase by sales guy?
+    RegisterNetEvent('qbx_vehicleshop:server:sellShowroomVehicle')
+    AddEventHandler('qbx_vehicleshop:server:sellShowroomVehicle', function(vehicle, playerId)
+        if Config.debug then print("Received QBX create new vehicle, purchase sell by player") end
+        TriggerClientEvent('qbx_vehicleshop:imperial:client:boughtshowroomvehicle', playerId)
 
     end)
 
