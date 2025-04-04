@@ -41,9 +41,6 @@ RegisterCommand('911', function(source, args)
     if callTimer > 0 then
         Notify("You must wait ~o~" .. callTimer .. " seconds ~w~before calling ~r~emergency services ~w~again.")
         return
-    else
-        callTimer = 15
-        Notify("Your call was successfully sent to emergency services.")
     end
 
     local callData = {
@@ -53,28 +50,11 @@ RegisterCommand('911', function(source, args)
         postal = exports["ImperialLocation"]:getPostal(),
         city = exports["ImperialLocation"]:getCity(),
         county = exports["ImperialLocation"]:getCounty(),
-        info = message
+        info = message,
+        coords = coords
     }
 
-    if Config.debug then
-        print("[Imperial911] Is creating a new 911 Chat Message")
-    end
-     
-    TriggerServerEvent('Imperial:911ChatMessage', callData.name, callData.street, message, callData.crossStreet, callData.postal)
-
-    if Config.debug then
-        print('[Imperial911] Is creating a new 911 in CAD')
-    end
-
     TriggerServerEvent('ImperialCAD:New911', callData)
-
-    if Config.debug and Config.callBlip then
-        print('[Imperial911] Is creating a new 911 blip')    
-    end
-
-    if Config.callBlip then
-    TriggerServerEvent("ImperialCAD:911Blip", coords)
-    end
     
 end, false)
 end

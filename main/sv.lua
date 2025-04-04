@@ -97,6 +97,8 @@ AddEventHandler('ImperialCAD:New911', function(callData)
         return  
     end
 
+    local coords = callData.coords
+
     exports["ImperialCAD"]:Create911Call({
         name = callData.name,
         street = callData.street,
@@ -106,10 +108,28 @@ AddEventHandler('ImperialCAD:New911', function(callData)
         city = callData.city,
         county = callData.county
     }, function(success, resultData)
-        if success then 
+        if success then
+            local apires = json.decode(resultData)
+            if not apires or not apires.response or not apires.response.callId then
+                print("^1[API_ERROR]^7 Invalid response or call ID not found")
+                return false
+            end
+
+            local callNum = apires.response.callnum
             print("[Imperial911] 911 Call was successfully created")
+             
+            TriggerEvent('Imperial:911ChatMessage', callData.name, callData.street, callData.info, callData.crossStreet, callData.postal, callNum)
+        
+            if Config.callBlip then
+            TriggerEvent("ImperialCAD:911Blip", coords)
+            end
+
+            Notify("Your call was successfully sent to emergency services.", source)
+
             else 
+
                 print("[Imperial911] 911 Call tried but failed")
+
             end
     end)
 end)
@@ -214,7 +234,7 @@ AddEventHandler('ImperialCAD:TrafficStop', function(callData)
                 return
             end
             local callnum = apires.response.callnum
-            print("911 Call created successfully: Call ID -", callnum)
+            print("Traffic Stop created successfully: Call ID -", callnum)
         else
             print(resultData)
         end
@@ -223,19 +243,28 @@ end)
 
 RegisterNetEvent('ImperialCAD:AttachCall')
 AddEventHandler('ImperialCAD:AttachCall', function(callData)
-
+local player = source
     exports["ImperialCAD"]:AttachCall({
         users_discordID = getDiscordId(source),
         callnum = callData.callnum
     }, function(success, resultData)
-        if Config.debug then
-        if success then
-               print("User was attached to the call?")
-                return
-            end
-               print("^1[ERROR]^7 Unable to attach user to call")
-        else
-            print(resultData)
+        local result = json.decode(resultData)
+        local status = result.status
+        local message = result.message
+        local response = result.response
+
+        if success and status ~= "success" then success = false end
+
+        if status == "NOT_RUN" then
+            status = "Invalid call or not verfified"
+        end
+        
+        if not success then
+            Notify(string.format("[ImperialCAD] Unable to attach you, reason: %s", status), player)
+        elseif success then
+            Notify("[ImperialCAD] Attached to call number "..response.callnum, player)
+        elseif not success and Config.debug then
+            Notify(string.format("[ImperialCAD - Debug] Unable to attach you, Status: %s | Reason: %", status, message), player)
         end
     end)
 end)
@@ -279,11 +308,20 @@ AddEventHandler('ImperialCAD:ClearPanic', function()
 end)
 
 function Notify(message, playerId)
-    TriggerClientEvent('chat:addMessage', playerId, {
-        color = {255, 0, 0},
-        multiline = true,
-        args = {"ImperialCAD", message}
-    })
+    if playerId and message then
+        if Config.debug then print("[ImperialCAD] Trying to notify player: "..playerId) end
+        TriggerClientEvent('chat:addMessage', playerId, {
+         color = {255, 0, 0},
+         multiline = true,
+         args = {"ImperialCAD", message}
+        })
+    elseif not message then
+        print("[IMPERIAL_SV_NOTIFY] No message provided")
+    elseif not playerId then
+        print("[IMPERIAL_SV_NOTIFY] No playerId provided")
+    else
+        print("[IMPERIAL_SV_NOTIFY] Couldnt send message")
+    end
 end
 
 RegisterNetEvent("ImperialCAD:Server:NewNotify")
@@ -372,13 +410,13 @@ end)
 
 
 RegisterNetEvent("Imperial:911ChatMessage")
-AddEventHandler("Imperial:911ChatMessage", function(name, street, message, crossStreet, postal)
+AddEventHandler("Imperial:911ChatMessage", function(name, street, message, crossStreet, postal, callNum)
 
     local chatMessage = {
         multiline = true,
         args = {"^8(ImperialCAD - New Call For Service)",
             "\nName: ^3" .. name .. "^7\nPostal: ^3" .. postal .. "^7\nStreet: ^3" .. street .. 
-            "^7\nCross Street: ^3" .. crossStreet .. "^7\nInformation: ^3" .. message
+            "^7\nCross Street: ^3" .. crossStreet .. "^7\nInformation: ^3" .. message .. "^7\nCall Number: ^3" .. callNum
         }
     }
 

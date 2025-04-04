@@ -15,16 +15,16 @@ checkConvar("imperial_community_id", "ImperialCAD Community ID")
 checkConvar("imperialAPI", "Imperial API key")
 
 local function performAPIRequest(url, data, headers, callback)
-    PerformHttpRequest(url, function(errorCode, resultData, resultHeaders)
+    PerformHttpRequest(url, function(errorCode, resultData, resultHeaders, errorData)
         if errorCode ~= 200 then
 
             if Config.debug then
-            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code: " .. errorCode)
+            print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
             end
 
             if callback then
-                if resultData then
-                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: " .. resultData)
+                if errorData then
+                callback(false, errorData:match("{.*}"))
                 else
                 callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
                 end
@@ -129,7 +129,7 @@ function AttachCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/AttachCall", data, headers, callback)
 
      if Config.debug then
-    print("[Imperial_Export_AttachCall] Attemping to attach this user!")
+    print("[Imperial_Export_AttachCall] Attemping to attach player "..source.." to call "..data.callnum)
      end
 
 end

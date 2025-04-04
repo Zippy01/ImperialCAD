@@ -22,21 +22,35 @@ local function performAPIRequest(url, method, data, headers, callback)
         data = json.encode(data)
     end
 
-    PerformHttpRequest(url, function(errorCode, resultData, resultHeaders)
+    PerformHttpRequest(url, function(errorCode, resultData, resultHeaders, errorData)
         if errorCode ~= 200 then
-            print("^1[ERROR]^7 HTTP Error Code: " .. errorCode)
-            if callback then
-                callback(false, "^1[ERROR]^7 Request failed with code: " .. errorCode)
+
+            if Config.debug then
+            print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
             end
+
+            if callback then
+                if errorData then
+                callback(false, errorData:match("{.*}"))
+                else
+                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
+                end
+            end
+
             return
+
         end
 
         if callback then
+            if resultData then
             callback(true, resultData)
+            else
+            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+            end
         end
-
+        
         if Config.debug then
-            print("Result Data: " .. resultData) 
+            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. resultData) 
         end
 
     end, method, data, headers) 
