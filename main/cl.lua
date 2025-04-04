@@ -57,6 +57,42 @@ RegisterCommand('911', function(source, args)
     TriggerServerEvent('ImperialCAD:New911', callData)
     
 end, false)
+
+TriggerEvent('chat:addSuggestion', '/A911', 'Call Emergency Services but Anonymously', {
+    { name = "Information", help = "Description of your call." }
+})
+
+RegisterCommand('A911', function(source, args)
+    local message = table.concat(args, " ")
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local streetHash, crossStreetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+
+    if message == nil or message == "" then
+        Notify("You need to include the ~o~call information ~w~first before calling ~r~Emergency Services.")
+        return
+    end
+
+    if callTimer > 0 then
+        Notify("You must wait ~o~" .. callTimer .. " seconds ~w~before calling ~r~emergency services ~w~again.")
+        return
+    end
+
+    local callData = {
+        name = "Anonymous Caller",
+        street = GetStreetNameFromHashKey(streetHash),
+        crossStreet = GetStreetNameFromHashKey(crossStreetHash) or "N/A",
+        postal = exports["ImperialLocation"]:getPostal(),
+        city = exports["ImperialLocation"]:getCity(),
+        county = exports["ImperialLocation"]:getCounty(),
+        info = message,
+        coords = coords
+    }
+
+    TriggerServerEvent('ImperialCAD:New911', callData)
+    
+end, false)
+
 end
 
 if Config.PlateThroughChat then
