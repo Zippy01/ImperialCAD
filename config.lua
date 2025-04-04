@@ -24,7 +24,7 @@ Config.requireVerify = false -- NOT FINISHED
 --Should these chat commands exist:
 Config.TsThroughChat = true
 Config.AttachThroughChat = true
-Config.Allow911Command = true -- This literally is for the /911 command, if you dont need it, disable it.
+Config.Allow911Command = true -- This will allow /a911 for Anonymous calls and /911 for normal calls that trys to send a caller based on active civ or username, if you dont need it, disable it.
 
 --Should a radius style blip appear on the map for new 911 calls? (This does require ImperialDuty)
 Config.callBlip = true

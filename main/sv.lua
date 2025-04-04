@@ -20,32 +20,85 @@ local function getVersionFromManifest()
     return 'unknown'
 end
 
-local currentVersion = getVersionFromManifest()
-local versionUrl = 'https://raw.githubusercontent.com/Zippy01/ImperialCAD/main/version.json'  
+local versionUrl = 'https://raw.githubusercontent.com/Zippy01/ImperialCAD/main/version.json'
+local latestVersion = "0.0.0.0"
 
-function checkForUpdates()
+local function checkForUpdates()
     local currentVersion = getVersionFromManifest()
+    local debugMode = Config.debug and "^2Enabled^7" or "^1Disabled^7"
+
+    local function checkConvarStatus(name)
+        local value = GetConvar(name, "")
+        if not value or value == "" then
+            return "^1Missing^7"
+        elseif #value < 15 then
+            return "^3Present (Possibly Invalid)^7"
+        else
+            return "^2Present (Appears Valid)^7"
+        end
+    end
+
+    local commIdStatus = checkConvarStatus("imperial_community_id")
+    local apiKeyStatus = checkConvarStatus("imperialAPI")
 
     PerformHttpRequest(versionUrl, function(err, responseText, headers)
-        if err == 200 then  
-            local data = json.decode(responseText)
-            if data and data.latestVersion and data.latestVersion ~= currentVersion then
-                print('[Current Version: ' .. currentVersion .. '] Update available! Please download the latest version: ' .. data.latestVersion)
+        local status = "Unknown"
+        local updateAvailable = false
+        local latest = "Unknown"
+
+        if err == 200 and responseText and responseText:match("{") then
+            local success, data = pcall(json.decode, responseText)
+            if success and data and data.latestVersion then
+                latestVersion = data.latestVersion
+                latest = latestVersion
+
+                if latestVersion ~= currentVersion then
+                    status = "^1Update Available^7"
+                    updateAvailable = true
+                else
+                    status = "^2Up to Date^7"
+                end
             else
-                print('ImperialCAD V'..currentVersion..' is up to date!')
+                status = "^3Version Check Failed^7"
             end
         else
-                print('Failed to check for updates.')
+            status = "^1Failed to Reach Update Server^7"
+        end
+
+        print("\n^4=======================[ ImperialCAD ]=======================^7")
+        print("  ^5Current Version:^7   " .. currentVersion)
+        print("  ^5Latest Version:^7    " .. latest)
+        print("  ^5Update Status:^7     " .. status)
+        print("  ^5Debug Mode:^7        " .. debugMode)
+        print("  ^5Community ID:^7      " .. commIdStatus)
+        print("  ^5API Key:^7           " .. apiKeyStatus)
+        print("^4============================================================\n^7")
+
+        if updateAvailable then
+            print("^3[ImperialCAD]^7 Visit ^4https://github.com/Zippy01/ImperialCAD^7 to download the latest version.")
         end
     end, 'GET', '')
 end
 
-CreateThread(function()
 
-    if Config.DisableVersionCheck then return end -- If config is set to disable
-    checkForUpdates()  -- Check for updates when the script starts
 
+AddEventHandler('onResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+
+    if GetCurrentResourceName() ~= "ImperialCAD" then
+        print("[^1ImperialCAD^7] Invalid script name. This script MUST be named ^3'ImperialCAD'^7 to work properly!")
+        return
+    end
+
+    print('[ImperialCAD] Hello World!')
+
+    if Config.DisableVersionCheck then return end
+
+    Wait(5000)
+    checkForUpdates()
 end)
+
+  
 
 --trys to find the discord ID
 local function getDiscordId(src)
