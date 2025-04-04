@@ -467,26 +467,15 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
 
         else 
 
-            if Config.QBXRegCurrent then -- If QBXRegCurrent is true then
-
                 if Config.debug then
             print("⚠️ Character NOT found in CAD. Creating new entry...")
                 end
-
-            else -- If QBRegCurrent is not true then (false)
-
-                if Config.debug then
-            print("⚠️ Character NOT found in CAD. Will not Create new entry config is set to false")
-                end
-
-            return end
 
             if gender == 0 then
                 gender = "MALE"
             elseif gender == 1 then
                 gender = "FEMALE"
             end
-
             
             -- If character isnt found, create a new one
             exports["ImperialCAD"]:NewCharacter({
