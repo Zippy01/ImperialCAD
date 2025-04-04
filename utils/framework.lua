@@ -107,7 +107,7 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
                 city = "nil",
                 county = "nil",
                 phonenum = phone,
-                dlstatus = "none",
+                dlstatus = "VALID",
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
@@ -359,7 +359,7 @@ AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_na
                 city = "nil",
                 county = "nil",
                 phonenum = phone,
-                dlstatus = "none",
+                dlstatus = "VALID",
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
@@ -495,7 +495,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                 city = "nil",
                 county = "nil",
                 phonenum = phone,
-                dlstatus = "none",
+                dlstatus = "VALID",
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
@@ -509,7 +509,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                     local data = {
                         ssn = eventdata.response.ssn,
                         name = eventdata.response.name,
-                        address = "Unkown Address",
+                        address = "Unknown Address",
                         age = eventdata.response.age
                     }
         
