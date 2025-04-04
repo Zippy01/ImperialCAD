@@ -258,6 +258,8 @@ local player = source
 
         if status == "NOT_RUN" then
             status = "Invalid call or not verfified"
+        elseif status == "BUSY" then
+            status = "You must be on duty and available to accept new calls"
         end
         
         if not success then
