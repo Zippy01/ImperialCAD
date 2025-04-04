@@ -96,7 +96,7 @@ AddEventHandler('ImperialCAD:New911', function(callData)
         print("[Imperial911] Missing required call data to create a new 911 call, Will not create.")
         return  
     end
-
+    local player = source
     local coords = callData.coords
 
     exports["ImperialCAD"]:Create911Call({
@@ -124,11 +124,12 @@ AddEventHandler('ImperialCAD:New911', function(callData)
             TriggerEvent("ImperialCAD:911Blip", coords)
             end
 
-            Notify("Your call was successfully sent to emergency services.", source)
+            TriggerClientEvent('ImperialCAD:Client:Notify', player, "Your call was successfully sent to emergency services.")
 
             else 
 
-                print("[Imperial911] 911 Call tried but failed")
+                TriggerClientEvent('ImperialCAD:Client:Notify', player, "Your call couldnt be created, but we let on duty units know!")
+                TriggerEvent('Imperial:911ChatMessage', callData.name, callData.street, callData.info, callData.crossStreet, callData.postal)
 
             end
     end)
@@ -411,7 +412,7 @@ end)
 
 RegisterNetEvent("Imperial:911ChatMessage")
 AddEventHandler("Imperial:911ChatMessage", function(name, street, message, crossStreet, postal, callNum)
-
+    if not callNum then callNum = "ERROR" end
     local chatMessage = {
         multiline = true,
         args = {"^8(ImperialCAD - New Call For Service)",
