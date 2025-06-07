@@ -8,7 +8,7 @@ game 'gta5'
 
 author 'Zippy OFC'
 description 'Imperial CAD FiveM integration'
-version '1.0.7'
+version '1.1.0'
 
 ui_page 'plugins/ImperialTablet/html/index.html'
 
@@ -17,19 +17,22 @@ server_script {
     'utils/imperialCharacter.lua',
     'main/sv.lua',
     'utils/framework.lua',
-    'plugins/CivilianInt/server.lua',
+    'utils/misc.lua',
+    'plugins/**/sv_*.lua',
+    --'plugins/**/sv_*.js',
 }
 
 client_script {
     'main/cl.lua',
-    'plugins/ImperialTablet/main.lua',
-    'plugins/CivilianInt/client.lua',
-    'Library/colors.lua',    -- Colors library (This list may require more colors!)
-    'Library/vehicles.lua',   -- vehicles library (Update addon vehicles as needed)
+    --'plugins/**/cl_*.js',
+    'plugins/**/cl_*.lua',
     'utils/cl_fw.lua'
 }
 
-shared_script {  'config.lua'
+shared_script {  
+    'config.lua',
+    'Library/colors.lua',    -- Colors library (This list may require more colors!)
+    'Library/vehicles.lua',   -- vehicles library (Update addon vehicles as needed)
 }
 
 dependencies {

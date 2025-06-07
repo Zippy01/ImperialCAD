@@ -15,6 +15,9 @@ Config.resourceName = "framework"
 ----QBX Core Frame work, and its configuration - This is meant for base QBCore events, and functions.
 Config.isQBX = false
 
+--ERS Integration / Support - Simply tells our ImperialCAD resource to listen for the ERS events and integrations.
+Config.ERSsupport = false
+
 --This will mark them off duty once they leave the game. (Requires a verfified discord ID, and they must be active within your community on the CAD)
 Config.cadkickonleave = true
 

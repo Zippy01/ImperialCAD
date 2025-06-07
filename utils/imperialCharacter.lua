@@ -89,6 +89,52 @@ function NewCharacter(data, callback)
     end
 end
 
+function NewCharacterAdvanced(data, callback)
+    local requestData = {
+        commId = GetConvar("imperial_community_id", ""),
+        Fname = data.Fname,
+        Mname = data.Mname,
+        Lname = data.Lname,
+        Birthdate = data.Birthdate,
+        gender = data.gender,
+        race = data.race,
+        hairC = data.hairC,
+        eyeC = data.eyeC,
+        height = data.height,
+        weight = data.weight,
+        postal = data.postal,
+        address = data.address,
+        city = data.city,
+        county = data.county,
+        state = data.state,
+        phonenum = data.phonenum,
+        licensedetails = {
+            hasBoatLic = data.licensedetails.hasBoatLic,
+            hasCDL = data.licensedetails.hasCDL,
+            CDLNumber = data.licensedetails.CDLNumber,
+            CDLStatus = data.licensedetails.CDLStatus,
+            hasDL = data.licensedetails.hasDL,
+            DLNumber = data.licensedetails.DLNumber,
+            DLStatus = data.licensedetails.DLStatus,
+            hasFirearmsCertification = data.licensedetails.hasFirearmsCertification,
+            hasFishLic = data.licensedetails.hasFishLic,
+            hasHuntLic = data.licensedetails.hasHuntLic
+        },
+        misc = {
+            missing = data.misc.missing
+        }
+    }
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["APIKEY"] = GetConvar("imperialAPI", "")
+    }
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/NewAdvancedCharacter", "POST", requestData, headers, callback)
+    
+    if Config.debug then
+       print("[ImperialExport] Attemping to create a new civilian CAD character!")
+    end
+end
+
 function DeleteCharacter(data, callback)
     local requestData = {
         commId = GetConvar("imperial_community_id", ""),
@@ -130,10 +176,55 @@ function GetCharacter(charid, commId, callback)
         if success then
             local data = json.decode(response)
             if data.status == "success" then
-                print("✅ Character retrieved: " .. json.encode(data.response))
-                if callback then callback(true, data.response) end
+                print("✅ Character retrieved: " .. json.encode(data))
+                if callback then callback(true, data) end
             else
                 print("❌ Character not found.")
+                if callback then callback(false, "Character not found.") end
+            end
+        else
+            print("❌ API Request Failed: " .. response)
+            if callback then callback(false, response) end
+        end
+    end)
+end
+
+function GetCharacterAdvanced(Character, callback)
+
+    local firstname = Character.firstname
+    local lastname = Character.lastname
+    local commId = GetConvar("imperial_community_id", "")
+
+    if not firstname or not lastname then
+        print("❌ Invalid Character table. It must not be empty and must contain a firstname and lastname.")
+        if callback then callback(false, "Invalid table") end
+        return
+    end
+
+    if not commId or commId == "" then
+        print("❌ Invalid Community ID. It must not be empty.")
+        if callback then callback(false, "Invalid Community ID") end
+        return
+    end
+
+    local url = string.format(
+        "http://imperialcad.app/api/1.1/wf/GetCharacterAdvanced?firstname=%s&lastname=%s&commId=%s",
+        firstname,
+        lastname,
+        commId
+    )
+
+    performAPIRequest(url, "GET", nil, nil, function(success, response)
+        if success then
+            local data = json.decode(response)
+            if data.status == "success" then
+                print("✅ [ADVANCED] Character retrieved: " .. json.encode(data.response))
+                if callback then callback(true, data) end
+            elseif data.status == "error" then
+                print("❌ [ADVANCED] Character not found.")
+                if callback then callback(true, data) end
+            else
+                print("❌ [ADVANCED] Character not found, Not an expected result")
                 if callback then callback(false, "Character not found.") end
             end
         else
@@ -164,7 +255,48 @@ function CreateVehicle(data, callback)
     end
 end
 
+function CreateVehicleAdvanced(data, callback)
+    local requestData = {
+        commId = GetConvar("imperial_community_id", ""),
+        vehicleData = {
+            plate = data.vehicleData.plate,
+            model = data.vehicleData.model,
+            Make = data.vehicleData.Make,
+            color = data.vehicleData.color,
+            year = data.vehicleData.year,
+            regState = data.vehicleData.regState,
+            regStatus = data.vehicleData.regStatus,
+            regExpDate = data.vehicleData.regExpDate,
+            vin = data.vehicleData.vin,
+            stolen = data.vehicleData.stolen
+        },
+        vehicleInsurance = {
+            hasInsurance = data.vehicleInsurance.hasInsurance,
+            insuranceStatus = data.vehicleInsurance.insuranceStatus,
+            insurancePolicyNum = data.vehicleInsurance.insurancePolicyNum
+        },
+        vehicleOwner = {
+            ownerSSN = data.vehicleOwner.ownerSSN,
+            ownerFirstName = data.vehicleOwner.ownerFirstName,
+            ownerLastName = data.vehicleOwner.ownerLastName,
+            ownerGender = data.vehicleOwner.ownerGender,
+            ownerAddress = data.vehicleOwner.ownerAddress,
+            ownerCity = data.vehicleOwner.ownerCity
+        }
+    }
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["APIKEY"] = GetConvar("imperialAPI", "")
+    }
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/registeradvancedvehicle", "POST", requestData, headers, callback)
+    
+    if Config.debug then
+       print("[ImperialExport_AdvancedVehReg] Attemping to register " .. requestData.vehicleData.plate .. " to CAD!")
+    end
+end
+
 exports('GetCharacter', GetCharacter)
 exports('NewCharacter', NewCharacter)
 exports('DeleteCharacter', DeleteCharacter)
 exports('CreateVehicle', CreateVehicle)
+exports('CreateVehicleAdvanced', CreateVehicleAdvanced)

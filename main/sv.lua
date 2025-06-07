@@ -98,20 +98,6 @@ AddEventHandler('onResourceStart', function(resourceName)
     checkForUpdates()
 end)
 
-  
-
---trys to find the discord ID
-local function getDiscordId(src)
-    if src == nil then return false end
-    local identifiers = GetPlayerIdentifiers(src)
-    for _, v in pairs(identifiers) do
-        if string.sub(v, 1, 8) == "discord:" then
-            return string.gsub(v, "discord:", "")
-        end
-    end
-    return false
-end
-
 if Config.cadkickonleave then
 AddEventHandler('playerDropped', function(reason, resourceName, clientDropReason)
     local playerName = GetPlayerName(source)
@@ -405,7 +391,7 @@ AddEventHandler("ImperialCAD:Server:NewNotify", function(callData)
     exports["ImperialCAD"]:CreateCall({
         users_discordID = "",
         street = street,
-        cross_street = crossStreet,
+        crossStreet = crossStreet,
         postal = postal,
         city = city,
         county = county,

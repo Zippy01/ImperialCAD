@@ -98,7 +98,7 @@ RegisterCommand("regveh", function(source, args, rawCommand)
             if Config.debug then
             print("Color ID for this request is " .. primaryColor)
             end
-            --TriggerServerEvent("ImperialCAD:registerVehicleToCAD", ssn, vehicleModelName, plate, colorName, makeName)
+            TriggerServerEvent("ImperialCAD:registerVehicleToCAD", ssn, vehicleModelName, plate, colorName, makeName)
             TriggerEvent("notify", "Registration has been sent to the DMV.")
         else
             TriggerEvent("notify", "You must set an active civilian before registering a vehicle.")
