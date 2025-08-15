@@ -245,7 +245,8 @@ AddEventHandler('ImperialCAD:CheckPlate', function(callData)
     end -- end of the addtional checks
 
     if #messages > 0 then
-        TriggerClientEvent('ImperialCAD:Client:Notify', source, messages)
+        print("It should work btw "..src)
+        TriggerClientEvent('ImperialCAD:Client:Notify', src, json.encode(messages))
     end
     
     end)

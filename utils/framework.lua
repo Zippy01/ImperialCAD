@@ -456,11 +456,12 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                 print("Result Data: " .. json.encode(resultData))
             end
 
+            local res = resultData.response
             local data = {
-                ssn = resultData.ssn,
-                name = resultData.Name,
-                address = resultData.address,
-                age = resultData.age
+                ssn = res.ssn,
+                name = res.Name,
+                address = res.address,
+                age = res.age
             }
 
             TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)

@@ -13,7 +13,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-function OnIsOfferedCallout(calloutdata)
+function OnIsOfferedCallout(calloutData)
     -- Add your code here. Keep in mind they are offered a callout. It is possible they will not accept the callout.
 
     -- if Config.Debug then
@@ -32,11 +32,10 @@ function OnIsOfferedCallout(calloutdata)
     -- end
 end
 
-function OnAcceptedCalloutOffer(calloutdata)
+function OnAcceptedCalloutOffer(calloutData)
     -- Add your code here. Keep in mind they have accepted a callout. It is possible they will cancel before arrival (and spawn of entities).
-    --print("Accepted Callout Data:", json.encode(calloutdata))
 
-    local ers = calloutdata
+    local ers = calloutData
 
     local coords = ers.Coordinates
     local streetHash, crossStreetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
@@ -44,9 +43,9 @@ function OnAcceptedCalloutOffer(calloutdata)
     local callData = {
         street = GetStreetNameFromHashKey(streetHash),
         cross_street = GetStreetNameFromHashKey(crossStreetHash),
-        postal = ers.Postal,
-        city = GetImperialCity(),
-        county = GetImperialCounty(),
+        postal = exports["ImperialCAD"]:getNearestPostalFromCoords(coords),
+        city = exports["ImperialCAD"]:getNearestCityFromCoords(coords),
+        county = exports["ImperialCAD"]:getNearestCountyFromCoords(coords),
         info = ers.Description,
         nature = ers.CalloutName,
         status = "ACTIVE",
@@ -54,14 +53,20 @@ function OnAcceptedCalloutOffer(calloutdata)
     }
 
     TriggerServerEvent("ImperialCAD:ERS:CREATECALLOUT", callData)
+
 end
 
-function OnArrivedAtCallout(calloutdata)
+function OnArrivedAtCallout(calloutData)
     -- Add your code here. This is triggered right before the entities are built for a callout. This code will execute first.
 end
 
 function OnEndedACallout() -- Contains no callout data.
     -- Add your code here. This is triggered right before the entities are deleted or callout is cancelled serverside. This code will execute first.
+    
+end
+
+function OnCalloutCompletedSuccesfully(calloutData)
+    -- Add your code here. This is triggered right after the entire callout task list is completed.
 end
 
 function OnNPCGivesGear(data)
@@ -112,14 +117,16 @@ function OnNPCGivesGear(data)
             end
         end
     else
-        local model = clothingData.modelName
-        if IsModelInCdimage(model) and IsModelValid(model) then
-            RequestModel(model)
-            while not HasModelLoaded(model) do
-                Wait(0)
+        if Config.GearData.EnableSetClothing then
+            local model = clothingData.modelName
+            if IsModelInCdimage(model) and IsModelValid(model) then
+                RequestModel(model)
+                while not HasModelLoaded(model) do
+                    Wait(0)
+                end
+                SetPlayerModel(PlayerId(), model)
+                SetModelAsNoLongerNeeded(model)
             end
-            SetPlayerModel(PlayerId(), model)
-            SetModelAsNoLongerNeeded(model)
         end
     end
 
@@ -135,24 +142,7 @@ function OnNPCGivesGear(data)
 
     -- Weapons
     if Config.GearData.EnableGiveWeapons then
-        if QBCore or ESX then
-            --Executed in s_functions.lua
-            TriggerServerEvent(Config.EventPrefix..":setWeaponsAmmoComponents", weaponData)
-        else 
-            -- Default GTA V Weapons
-            for k, v in pairs(weaponData) do
-                local playerPed = PlayerPedId()
-                GiveWeaponToPed(playerPed, GetHashKey(v.weaponName), v.ammoCount, false, true)
-                if #v.componentList > 0 then
-                    for i, component in pairs(v.componentList) do
-                        GiveWeaponComponentToPed(playerPed, GetHashKey(v.weaponName), GetHashKey(component)) 
-                        if Config.Debug then
-                            print("Set component "..component.." to given weapon "..v.weaponName)
-                        end
-                    end
-                end
-            end
-        end
+        TriggerServerEvent(Config.EventPrefix..":setWeaponsAmmoComponents", weaponData)
     end
 
     -- Health and armor
@@ -188,7 +178,7 @@ function message(lineOne, lineTwo, lineThree, duration)
     EndTextCommandDisplayHelp(0, false, true, duration or 5000)
 end
 
-function notify(notificationText, notificationDuration, notificationPosition, notificationType)
+function notify(notificationText)
     SetNotificationTextEntry("STRING")
     AddTextComponentString(notificationText)
     DrawNotification(true, true)
@@ -241,8 +231,16 @@ end
 
 function LoadAnimDict(dict)
     RequestAnimDict(dict)
-    while (not HasAnimDictLoaded(dict)) do        
+    -- 1.5s timeout with debug print if timeout is reached
+    local startTime = GetGameTimer()
+    while (not HasAnimDictLoaded(dict)) and (GetGameTimer() - startTime < 1500) do
         Citizen.Wait(1)
+    end
+    if not HasAnimDictLoaded(dict) then
+        print(string.format("ERROR: Failed to load animation dictionary: %s in 1.5s", dict))
+    else
+        local timeTaken = GetGameTimer() - startTime
+        print(string.format("INFO: Successfully loaded animation dictionary: %s in %s ms", dict, timeTaken))
     end
 end
 

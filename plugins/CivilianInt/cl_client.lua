@@ -26,7 +26,7 @@ AddEventHandler("ImperialCAD:setActiveCiv", function(data)
 
         TriggerEvent("notify", "Civilian profile activated: " .. data.name)
     else
-        TriggerEvent("notify", "Data reception error. Please check logs.")
+        TriggerEvent("notify", "Data reception error. Please check server logs.")
         DeleteResourceKvp("civ_ssn")
         DeleteResourceKvp("civ_name")
         DeleteResourceKvp("civ_age")
@@ -65,15 +65,6 @@ RegisterCommand("clearciv", function(source, args, rawCommand)
 
     TriggerEvent("notify", "Active civilian profile has been cleared.")
 end, false)
-
-RegisterNetEvent("notify")
-AddEventHandler("notify", function(message)
-    local fullMessage = "[IMPERIAL] " .. message
-    SetNotificationTextEntry("STRING")
-    AddTextComponentString(fullMessage)
-    DrawNotification(false, true)
-end)
-
 
 RegisterCommand("regveh", function(source, args, rawCommand)
     local ped = PlayerPedId()

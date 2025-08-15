@@ -47,9 +47,9 @@ RegisterCommand('911', function(source, args)
         name = name,
         street = GetStreetNameFromHashKey(streetHash),
         crossStreet = GetStreetNameFromHashKey(crossStreetHash) or "N/A",
-        postal = exports["ImperialLocation"]:getPostal(),
-        city = exports["ImperialLocation"]:getCity(),
-        county = exports["ImperialLocation"]:getCounty(),
+        postal = GetImperialPostal(),
+        city = GetImperialCity(),
+        county = GetImperialCounty(),
         info = message,
         coords = coords
     }
@@ -82,9 +82,9 @@ RegisterCommand('A911', function(source, args)
         name = "Anonymous Caller",
         street = GetStreetNameFromHashKey(streetHash),
         crossStreet = GetStreetNameFromHashKey(crossStreetHash) or "N/A",
-        postal = exports["ImperialLocation"]:getPostal(),
-        city = exports["ImperialLocation"]:getCity(),
-        county = exports["ImperialLocation"]:getCounty(),
+        postal = GetImperialPostal(),
+        city = GetImperialCity(),
+        county = GetImperialCounty(),
         info = message,
         coords = coords
     }
@@ -136,7 +136,7 @@ RegisterCommand('panic', function()
     local streetHash, crossStreetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
     
     local callData = {
-    postal = exports["ImperialLocation"]:getPostal(),
+    postal = GetImperialPostal(),
     street = GetStreetNameFromHashKey(streetHash)
     }
 
@@ -154,17 +154,6 @@ RegisterCommand('panic', function()
     TriggerServerEvent('ImperialCAD:Panic', callData)
  end
 end, false)
-
-if Config.debug then
-RegisterCommand('testloc', function()
-local postalCode = exports['ImperialLocation']:getPostal()
-local cityName = exports['ImperialLocation']:getCity()
-local countyName = exports['ImperialLocation']:getCounty()
-
-print("Current location:", postalCode, cityName, countyName)
-    
-end, false)
-end
 
 if Config.TsThroughChat then
 
@@ -186,9 +175,9 @@ if Config.TsThroughChat then
         local callData = {
             street = GetStreetNameFromHashKey(streetHash),
             cross_street = GetStreetNameFromHashKey(crossStreetHash),
-            postal = exports["ImperialLocation"]:getPostal(),
-            city = exports["ImperialLocation"]:getCity(),
-            county = exports["ImperialLocation"]:getCounty(),
+            postal = GetImperialPostal(),
+            city = GetImperialCity(),
+            county = GetImperialCounty(),
             info = message
         }
     
@@ -218,8 +207,9 @@ if Config.TsThroughChat then
     end)
 
 function Notify(message)
+    local fullMessage = "[IMPERIAL] " .. message
     BeginTextCommandThefeedPost("STRING");
-    AddTextComponentSubstringPlayerName(message);
+    AddTextComponentSubstringPlayerName(fullMessage);
     EndTextCommandThefeedPostMessagetext("CHAR_CALL911", "CHAR_CALL911", true, 1, "Imperial911", "Emergency Services");
 end
 
@@ -252,14 +242,21 @@ AddEventHandler("Imperial:911BlipForOnduty", function(coords)
 
     blips[blipId] = {radiusBlip = radiusBlip, coordBlip = coordBlip, x = newX, y = newY, z = coords.z}
 
-    -- Set a timer to remove the blip after 5 minutes
     Citizen.CreateThread(function()
-        Citizen.Wait(180000) -- 3 minutes in milliseconds
+        Citizen.Wait(Config.callBlipDuration * 60000)
         if blips[blipId] then
             if blips[blipId].radiusBlip then RemoveBlip(blips[blipId].radiusBlip) end
             if blips[blipId].coordBlip then RemoveBlip(blips[blipId].coordBlip) end
             blips[blipId] = nil
-            print("Blip ID " .. blipId .. " has been automatically removed after 5 minutes.")
+            if Config.debug then print("Blip ID " .. blipId .. " has been automatically removed after 5 minutes.") end
         end
     end)
+end)
+
+lib.callback.register('ImperialCAD:getNearestStreets', function(coords)
+    local streetHash, crossStreetHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+    local street = GetStreetNameFromHashKey(streetHash)
+    local crossStreet = GetStreetNameFromHashKey(crossStreetHash)
+    local response = {street = street, crossStreet = crossStreet}
+    return response
 end)

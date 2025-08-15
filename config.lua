@@ -24,13 +24,18 @@ Config.cadkickonleave = true
 --simply requires them to do /verify to ensure there discord ID matches a verified account within ImperialCAD
 Config.requireVerify = false -- NOT FINISHED
 
+-- This will determine how often ImperialLocation will update each users current postal, city, and county for ImperialCAD API calls. (Only change this if you are experincing performance issues.) 
+Config.locationFrequency = 2000
+
 --Should these chat commands exist:
 Config.TsThroughChat = true
+Config.PlateThroughChat = true -- Allows users to run a plate using the /rplate command
 Config.AttachThroughChat = true
 Config.Allow911Command = true -- This will allow /a911 for Anonymous calls and /911 for normal calls that trys to send a caller based on active civ or username, if you dont need it, disable it.
 
 --Should a radius style blip appear on the map for new 911 calls? (This does require ImperialDuty)
 Config.callBlip = true
+Config.callBlipDuration = 5 --In minutes
 
 --Traffic Stop command Related config (This is useless if your "Config.TsThroughChat" is false)
 Config.trafficsnature = "Traffic Stop"

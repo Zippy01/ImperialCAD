@@ -17,7 +17,7 @@ AddEventHandler("ImperialCAD:getCivData", function(ssn)
         if statusCode == 200 then
             local responseData = json.decode(response)
             if responseData and responseData.ssn then
-                TriggerClientEvent("ImperialCAD:setActiveCiv", src, responseData) 
+                TriggerClientEvent("ImperialCAD:setActiveCiv", src, responseData)
             else
                 print("No SSN found in the data. Response: " .. response)
                 TriggerClientEvent("notify", src, "No civilian found with this SSN.")

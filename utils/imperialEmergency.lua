@@ -82,7 +82,7 @@ function DeleteCall(data, callback)
         ["Content-Type"] = "application/json",
         ["APIKEY"] = GetConvar("imperialAPI", "")
     }
-    performAPIRequest("https://imperialcad.app/api/1.1/wf/Calldelete", data, headers, callback)
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/CallDelete", data, headers, callback)
 
     if Config.debug then
     print("[Imperial_Export_DeleteCall] Attemping to delete a 911 call!")
