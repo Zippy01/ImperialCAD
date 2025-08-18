@@ -282,8 +282,8 @@ end)
 
 end
 
- -- NAT2k15 Integration
-if Config.isNAT2k15 then
+ -- NAT2K15 Integration
+if Config.isNAT2K15 then
     
     FWN = Config.resourceName
     NAT = exports[FWN]:getServerFunctions()    
