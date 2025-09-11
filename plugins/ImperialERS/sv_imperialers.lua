@@ -344,6 +344,7 @@ AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
 
 end)
 
+if Config.UseERSPulloverEnded then
 RegisterServerEvent("ErsIntegration::OnPulloverEnded")
 AddEventHandler("ErsIntegration::OnPulloverEnded", function(pedData, vehicleData)
     local src = source
@@ -368,3 +369,4 @@ AddEventHandler("ErsIntegration::OnPulloverEnded", function(pedData, vehicleData
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end
 end)
+end
