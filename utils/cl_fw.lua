@@ -35,7 +35,7 @@ AddEventHandler('qb-vehicleshop:client:buyShowroomVehicle', function(vehicleMode
         }
 
         if Config.debug then
-            print("? Vehicle purchase detected: " .. vehicleModelName .. " | Plate: " .. plate .. " | Sending to the best cad in the world...")
+            print("Vehicle purchase detected: " .. vehicleModelName .. " | Plate: " .. plate .. " | Sending to the best cad in the world...")
             print(plate .. " " .. data.ssn)
         end
 

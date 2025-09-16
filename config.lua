@@ -9,14 +9,18 @@ Config.isQB = false -- Vehicles, Characters
 Config.QBRegCurrent = false -- Literally will register a character when a previous is loaded (not created/deleted), as long as that unique citizen ID isnt already in the CAD.
 
 --Nat2K15 Frame work, and its configuration
-Config.isNat2K15 = false
+Config.isNAT2K15 = false
 Config.resourceName = "framework"
 
 ----QBX Core Frame work, and its configuration - This is meant for base QBCore events, and functions.
 Config.isQBX = false
 
---ERS Integration / Support - Simply tells our ImperialCAD resource to listen for the ERS events and integrations.
+--ERS Integration / Support - Simply tells our ImperialCAD resource to listen for the ERS events and integrations. (This required the Advanced plan or higher)
 Config.ERSsupport = false
+Config.UseERSPulloverEnded = false -- This often results in premature call closes and isnt recommended, but if set to true we will close your current call if ERS says your pullover is ended.
+
+--Enable livemap support? (This requires the Advanced plan or higher)
+Config.livemap = false
 
 --This will mark them off duty once they leave the game. (Requires a verfified discord ID, and they must be active within your community on the CAD)
 Config.cadkickonleave = true

@@ -53,6 +53,7 @@ set imperialAPI "API_Secret_Key_HERE"
 - `/rplate <plate>`
 - `/ts <details>`
 - `/attach <callnum>`
+- `/ToggleTracking`
 
 ## Contributing
 Fork, modify, and submit pull requests to contribute.

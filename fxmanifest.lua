@@ -8,7 +8,7 @@ game 'gta5'
 
 author 'Zippy OFC'
 description 'Imperial CAD FiveM integration'
-version '1.1.5'
+version '1.1.7'
 
 ui_page 'plugins/ImperialTablet/html/index.html'
 
@@ -39,6 +39,10 @@ shared_script {
 
 dependencies {
     'ox_lib'
+}
+
+yarn_dependencies {
+    'ws'
 }
 
 files {

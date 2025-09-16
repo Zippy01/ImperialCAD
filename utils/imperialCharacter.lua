@@ -155,13 +155,13 @@ end
 function GetCharacter(charid, commId, callback)
 
     if not charid or charid == "" then
-        print("❌ Invalid Character ID. It must not be empty.")
+        print("Invalid Character ID. It must not be empty.")
         if callback then callback(false, "Invalid Character ID") end
         return
     end
 
     if not commId or commId == "" then
-        print("❌ Invalid Community ID. It must not be empty.")
+        print("Invalid Community ID. It must not be empty.")
         if callback then callback(false, "Invalid Community ID") end
         return
     end
@@ -176,14 +176,14 @@ function GetCharacter(charid, commId, callback)
         if success then
             local data = json.decode(response)
             if data.status == "success" then
-                print("✅ Character retrieved: " .. json.encode(data))
+                print("Character retrieved: " .. json.encode(data))
                 if callback then callback(true, data) end
             else
-                print("❌ Character not found.")
+                print("Character not found.")
                 if callback then callback(false, "Character not found.") end
             end
         else
-            print("❌ API Request Failed: " .. response)
+            print("API Request Failed: " .. response)
             if callback then callback(false, response) end
         end
     end)
@@ -196,13 +196,13 @@ function GetCharacterAdvanced(Character, callback)
     local commId = GetConvar("imperial_community_id", "")
 
     if not firstname or not lastname then
-        print("❌ Invalid Character table. It must not be empty and must contain a firstname and lastname.")
+        print("Invalid Character table. It must not be empty and must contain a firstname and lastname.")
         if callback then callback(false, "Invalid table") end
         return
     end
 
     if not commId or commId == "" then
-        print("❌ Invalid Community ID. It must not be empty.")
+        print("Invalid Community ID. It must not be empty.")
         if callback then callback(false, "Invalid Community ID") end
         return
     end
@@ -218,17 +218,17 @@ function GetCharacterAdvanced(Character, callback)
         if success then
             local data = json.decode(response)
             if data.status == "success" then
-                print("✅ [ADVANCED] Character retrieved: " .. json.encode(data.response))
+                print("[ADVANCED] Character retrieved: " .. json.encode(data.response))
                 if callback then callback(true, data) end
             elseif data.status == "error" then
-                print("❌ [ADVANCED] Character not found.")
+                print("[ADVANCED] Character not found.")
                 if callback then callback(true, data) end
             else
-                print("❌ [ADVANCED] Character not found, Not an expected result")
+                print("[ADVANCED] Character not found, Not an expected result")
                 if callback then callback(false, "Character not found.") end
             end
         else
-            print("❌ API Request Failed: " .. response)
+            print("API Request Failed: " .. response)
             if callback then callback(false, response) end
         end
     end)
