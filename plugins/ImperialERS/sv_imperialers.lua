@@ -245,7 +245,7 @@ RegisterNetEvent('ErsIntegration::OnArrivedAtCallout')
 AddEventHandler('ErsIntegration::OnArrivedAtCallout', function(callData)
     if Config.debug then print("Received arrived at callout from ERS") end
 end)
-
+if Config.UseERSCalloutEnded then
 RegisterNetEvent('ErsIntegration::OnEndedACallout')
 AddEventHandler('ErsIntegration::OnEndedACallout', function()
     if Config.debug then print("Received ended a callout from ERS") end
