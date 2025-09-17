@@ -19,7 +19,7 @@ Config.isQBX = false
 Config.ERSsupport = false
 Config.UseERSPulloverEnded = false -- This often results in premature call closes and isnt recommended, but if set to true we will close your current call if ERS says your pullover is ended.
 
---Enable livemap support? (This requires the Advanced plan or higher)
+--Enable livemap support? (This requires a Premium plan)
 Config.livemap = false
 
 --This will mark them off duty once they leave the game. (Requires a verfified discord ID, and they must be active within your community on the CAD)

@@ -500,7 +500,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
-                    print("✅ New Character Created in CAD for CitizenID: " .. citizenid)
+                    print("New Character Created in CAD for CitizenID: " .. citizenid)
                     if Config.debug then
                         print("Result Data: " .. json.encode(createResult))
                     end
