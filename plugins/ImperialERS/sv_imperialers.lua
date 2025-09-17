@@ -270,7 +270,7 @@ AddEventHandler('ErsIntegration::OnEndedACallout', function()
 end)
 end
 
-if Config.UseERSCalloutSuccesfullyEnded then
+if Config.UseERSCalloutSuccessfullyEnded then
 RegisterServerEvent("ErsIntegration::OnCalloutCompletedSuccesfully")
 AddEventHandler("ErsIntegration::OnCalloutCompletedSuccesfully", function(calloutData)
     if Config.debug then print("Received ended a callout from ERS") end

@@ -18,7 +18,7 @@ Config.isQBX = false
 --ERS Integration / Support - Simply tells our ImperialCAD resource to listen for the ERS events and integrations. (This required the Advanced plan or higher)
 Config.ERSsupport = false
 Config.UseERSCalloutEnded = false -- This often results in premature call closes as ERS determines call complete when a subject is in custody or tended to by AI support, but if set to true we will close your current call if ERS says your callout is ended. If set to false, this may cause calls to stack for public servers where players are not part of the CAD.
-Config.UseERSCalloutSuccesfullyEnded = false -- This often results in premature call closes as ERS determines call succsfully completed (which ERS has sometimes properly flags the call as succesful), but if set to true we will close your current call if ERS says your callout is ended. If set to false, this may cause calls to stack for public servers where players are not part of the CAD.
+Config.UseERSCalloutSuccessfullyEnded = false -- This often results in premature call closes as ERS determines call succsfully completed (which ERS has sometimes properly flags the call as succesful), but if set to true we will close your current call if ERS says your callout is ended. If set to false, this may cause calls to stack for public servers where players are not part of the CAD.
 Config.UseERSPulloverEnded = false -- This often results in premature call closes and isnt recommended, but if set to true we will close your current call if ERS says your pullover is ended.
 
 --Enable livemap support? (This requires a Premium plan)
