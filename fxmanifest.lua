@@ -8,7 +8,7 @@ game 'gta5'
 
 author 'Zippy OFC'
 description 'Imperial CAD FiveM integration'
-version '1.1.8'
+version '1.1.9'
 
 ui_page 'plugins/ImperialTablet/html/index.html'
 

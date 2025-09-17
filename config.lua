@@ -18,6 +18,8 @@ Config.isQBX = false
 --ERS Integration / Support - Simply tells our ImperialCAD resource to listen for the ERS events and integrations. (This required the Advanced plan or higher)
 Config.ERSsupport = false
 Config.UseERSPulloverEnded = false -- This often results in premature call closes and isnt recommended, but if set to true we will close your current call if ERS says your pullover is ended.
+Config.UseERSCalloutEnded = false -- This may results in premature call closes, but if set to true we will close your current call if ERS says your callout has ended.
+Config.UseERSCalloutCompletedSuccesfully = false -- This may results in premature call closes, but if set to true we will close your current call if ERS says your callout was completed.
 
 --Enable livemap support? (This requires a Premium plan)
 Config.livemap = false

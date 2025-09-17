@@ -246,6 +246,7 @@ AddEventHandler('ErsIntegration::OnArrivedAtCallout', function(callData)
     if Config.debug then print("Received arrived at callout from ERS") end
 end)
 
+if Config.UseERSCalloutEnded then
 RegisterNetEvent('ErsIntegration::OnEndedACallout')
 AddEventHandler('ErsIntegration::OnEndedACallout', function()
     if Config.debug then print("Received ended a callout from ERS") end
@@ -268,7 +269,9 @@ AddEventHandler('ErsIntegration::OnEndedACallout', function()
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end
 end)
+end
 
+if Config.UseERSCalloutCompletedSuccesfully then
 RegisterServerEvent("ErsIntegration::OnCalloutCompletedSuccesfully")
 AddEventHandler("ErsIntegration::OnCalloutCompletedSuccesfully", function(calloutData)
     if Config.debug then print("Received ended a callout from ERS") end
@@ -291,6 +294,7 @@ AddEventHandler("ErsIntegration::OnCalloutCompletedSuccesfully", function(callou
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end
 end)
+end
 
 RegisterServerEvent("ErsIntegration::OnPullover")
 AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
