@@ -3,7 +3,7 @@ if not Config.livemap then return end
 local x, y
 local lastSend = 0
 local SEND_INTERVAL = 10000
-local tracking = true
+local tracking = false
 
 RegisterNetEvent('ImperialCAD:livemap:client:ToggleTracking', function(Atracking)
     tracking = Atracking

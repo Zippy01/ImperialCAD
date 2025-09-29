@@ -48,6 +48,18 @@ local function GetVehicleData(plate, cb)
 
 end
 
+if Config.ImperialDutySync then
+RegisterNetEvent('ErsIntegration::OnToggleShift')
+AddEventHandler('ErsIntegration::OnToggleShift', function(source, isOnShift, serviceType)
+    local job = nil
+
+    if serviceType == "police" then job = "LEO" elseif serviceType == "fire" then job = "FIRE" end
+
+    if job ~= nil and isOnShift then TriggerEvent("Imperial:AddUnitOnDuty", job, source) TriggerClientEvent('Imperial:Client:SuitNewUnit', source, job) end
+    if job ~= nil and not isOnShift then TriggerEvent("Imperial:RemoveUnitOnDuty", job, source) TriggerClientEvent('Imperial:Client:UnSuitNewUnit', source) end
+end)
+end
+
 RegisterNetEvent('ErsIntegration::OnFirstNPCInteraction')
 AddEventHandler('ErsIntegration::OnFirstNPCInteraction', function(source, data, context)
     if Config.debug then print("Received ERS ped info", json.encode(data)) end

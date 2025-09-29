@@ -1,6 +1,13 @@
 local tabletVisible = false
 local tabletProp = nil 
 
+local function Notify(message)
+    local fullMessage = "[IMPERIAL] " .. message
+    SetNotificationTextEntry("STRING")
+    AddTextComponentString(fullMessage)
+    DrawNotification(false, true)
+end
+
 local function closeTablet()
     local ped = GetPlayerPed(-1)
     
@@ -11,7 +18,6 @@ local function closeTablet()
         tabletProp = nil
     end
 
-    -- Additional delay to ensure everything clears properly
     Citizen.Wait(100)
 
     SetNuiFocus(false, false)
@@ -47,6 +53,9 @@ end)
 
 RegisterCommand("tablet", function(source, args, rawCommand)
     local ped = GetPlayerPed(-1)
+    local currentVehicle = GetVehiclePedIsIn(ped, false)
+
+    if Config.tabletCarRestriction and GetVehicleClass(currentVehicle) ~= 18 then Notify("You must be in a Emergency Vehicle to use your Imperial Tablet.") return end
 
     if IsEntityPlayingAnim(ped, "amb@code_human_in_bus_passenger_idles@female@tablet@base", "base", 3) then
         closeTablet()

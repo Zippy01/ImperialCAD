@@ -255,6 +255,23 @@ function CreateVehicle(data, callback)
     end
 end
 
+function SetActiveCiv(data, callback)
+    local requestData = {
+        commId = GetConvar("imperial_community_id", ""),
+        users_discordID = data.users_discordID,
+        ssn = data.ssn
+    }
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["APIKEY"] = GetConvar("imperialAPI", "")
+    }
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/setActiveCivilian", "POST", requestData, headers, callback)
+    
+    if Config.debug then
+       print(string.format("[ImperialExport] Attemping to set ssn %s as active civ for %s in CAD!", data.ssn, data.users_discordID))
+    end
+end
+
 function CreateVehicleAdvanced(data, callback)
     local requestData = {
         commId = GetConvar("imperial_community_id", ""),
@@ -300,3 +317,4 @@ exports('NewCharacter', NewCharacter)
 exports('DeleteCharacter', DeleteCharacter)
 exports('CreateVehicle', CreateVehicle)
 exports('CreateVehicleAdvanced', CreateVehicleAdvanced)
+exports('SetActiveCiv', SetActiveCiv)

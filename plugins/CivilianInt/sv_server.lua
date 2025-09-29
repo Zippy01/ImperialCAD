@@ -18,6 +18,7 @@ AddEventHandler("ImperialCAD:getCivData", function(ssn)
             local responseData = json.decode(response)
             if responseData and responseData.ssn then
                 TriggerClientEvent("ImperialCAD:setActiveCiv", src, responseData)
+                SetActiveCiv({users_discordID = getDiscordId(src), ssn = ssn}, false)
             else
                 print("No SSN found in the data. Response: " .. response)
                 TriggerClientEvent("notify", src, "No civilian found with this SSN.")

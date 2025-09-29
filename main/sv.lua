@@ -425,11 +425,11 @@ AddEventHandler("ImperialCAD:Server:NewNotify", function(callData)
 
             local successDuty, onDutyUnits = pcall(function()
                 if job == "LEO" then
-                    return exports["ImperialDuty"]:GetOnDutyLEOUnits()
+                    return exports["ImperialCAD"]:GetOnDutyLEOUnits()
                 elseif job == "FIRE" then
-                    return exports["ImperialDuty"]:GetOnDutyFireUnits()
+                    return exports["ImperialCAD"]:GetOnDutyFireUnits()
                 else
-                    return exports["ImperialDuty"]:GetOnDutyUnits()
+                    return exports["ImperialCAD"]:GetOnDutyUnits()
                 end
             end)
 
@@ -464,7 +464,7 @@ AddEventHandler("Imperial:911ChatMessage", function(name, street, message, cross
     }
 
     local success, onDutyUnits = pcall(function()
-        return exports["ImperialDuty"]:GetOnDutyUnits()
+        return exports["ImperialCAD"]:GetOnDutyUnits()
     end)
 
     if success and onDutyUnits then
@@ -480,7 +480,7 @@ RegisterNetEvent("ImperialCAD:911Blip")
 AddEventHandler("ImperialCAD:911Blip", function(coords)
 
     local success, OnDutyUnitsFound = pcall(function()
-        return exports['ImperialDuty']:GetOnDutyUnits()
+        return exports["ImperialCAD"]:GetOnDutyUnits()
      end)
      
      if success then

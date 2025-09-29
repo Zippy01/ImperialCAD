@@ -225,6 +225,23 @@ function CheckPlate(data, callback)
 
 end
 
+function GetUnit(data, callback)
+    local data = {
+        communityId = GetConvar("imperial_community_id", ""),
+        users_discordID = data.users_discordID
+    }
+    local headers = {
+        ["Content-Type"] = "application/json",
+        ["APIKEY"] = GetConvar("imperialAPI", "")
+    }
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/GetUnit", data, headers, callback)
+
+    if Config.debug then
+    print("[Imperial_Export_CheckPlate] Attempting to get unit" .. data.plate)
+    end
+
+end
+
 exports('Create911Call', Create911Call)
 exports('DeleteCall', DeleteCall)
 exports('CreateCall', CreateCall)
@@ -234,3 +251,4 @@ exports('Booter', Booter)
 exports('CheckPlate', CheckPlate)
 exports('Panic', Panic)
 exports('ClearPanic', ClearPanic)
+exports('GetUnit', GetUnit)

@@ -33,7 +33,6 @@ set imperialAPI "API_Secret_Key_HERE"
 [ImperialLocation GitHub](https://github.com/Zippy01/ImperialLocation)
 
 ## Recommended Additional Resources
-- **ImperialDuty**: Enhances in-game alerts.
 - **DriversLic**: Manages driver's licenses.
 [DriversLic GitHub](https://github.com/Zippy01/DriversLic)
 
