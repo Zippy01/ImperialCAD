@@ -80,8 +80,6 @@ local function checkForUpdates()
     end, 'GET', '')
 end
 
-
-
 AddEventHandler('onResourceStart', function(resourceName)
     if resourceName ~= GetCurrentResourceName() then return end
 
@@ -165,14 +163,33 @@ AddEventHandler('ImperialCAD:New911', function(callData)
 
             TriggerClientEvent('ImperialCAD:Client:Notify', player, "Your call was successfully sent to emergency services.")
 
-            else 
+            else
 
-                TriggerClientEvent('ImperialCAD:Client:Notify', player, "Your call couldnt be created, but we let on duty units know!")
+                TriggerClientEvent('ImperialCAD:Client:Notify', player, "Looks like dispatch is having trouble, We let officers know tho.")
                 TriggerEvent('Imperial:911ChatMessage', callData.name, callData.street, callData.info, callData.crossStreet, callData.postal)
-
+                    if Config.callBlip then
+                        TriggerEvent("ImperialCAD:911Blip", coords)
+                    end
             end
     end)
 end)
+
+function Notify(message, playerId)
+    if playerId and message then
+        if Config.debug then print("[ImperialCAD] Trying to notify player: "..playerId) end
+        TriggerClientEvent('chat:addMessage', playerId, {
+         color = {255, 0, 0},
+         multiline = true,
+         args = {"ImperialCAD", message}
+        })
+    elseif not message then
+        print("[IMPERIAL_SV_NOTIFY] No message provided")
+    elseif not playerId then
+        print("[IMPERIAL_SV_NOTIFY] No playerId provided")
+    else
+        print("[IMPERIAL_SV_NOTIFY] Couldnt send message")
+    end
+end
 
 if Config.PlateThroughChat then
 RegisterNetEvent('ImperialCAD:CheckPlate')
@@ -255,6 +272,7 @@ end
 
 RegisterNetEvent('ImperialCAD:TrafficStop')
 AddEventHandler('ImperialCAD:TrafficStop', function(callData)
+    local player = source
 
     exports["ImperialCAD"]:CreateCall({
         users_discordID = getDiscordId(source),
@@ -271,12 +289,15 @@ AddEventHandler('ImperialCAD:TrafficStop', function(callData)
         if success then
             local apires = json.decode(resultData)
             if not apires or not apires.response or not apires.response.callId then
-                print("^1[ERROR]^7 Invalid response or call ID not found")
+                if Config.debug then print("^1[ERROR]^7 Invalid response or call ID not found") end
+                Notify("[TS] Unable to create traffic stop", player)
                 return
             end
             local callnum = apires.response.callnum
-            print("Traffic Stop created successfully: Call ID -", callnum)
+            if Config.debug then print("Traffic Stop created successfully: Call ID -", callnum) end
+            Notify("[TS] Traffic stop created succesfully, Call Number: "..callnum, player)
         else
+            Notify("[TS] Unable to create traffic stop", player)
             print(resultData)
         end
     end)
@@ -297,17 +318,19 @@ local player = source
         if success and status ~= "success" then success = false end
 
         if status == "NOT_RUN" then
-            status = "Invalid call or not verfified"
+            status = "Unkown error and status"
         elseif status == "BUSY" then
             status = "You must be on duty and available to accept new calls"
+        elseif status == "NoSelfDisp" then
+            status = "Disptach has marked emergency calls as dispatch only, Please check your cad or reference dispatch"
         end
         
         if not success then
-            Notify(string.format("[ImperialCAD] Unable to attach you, reason: %s", status), player)
+            Notify(string.format("[Attach] Unable to attach you, reason: %s", status), player)
         elseif success then
-            Notify("[ImperialCAD] Attached to call number "..response.callnum, player)
+            Notify("[Attach] Attached to call number "..response.callnum, player)
         elseif not success and Config.debug then
-            Notify(string.format("[ImperialCAD - Debug] Unable to attach you, Status: %s | Reason: %", status, message), player)
+            Notify(string.format("[Attach - Debug] Unable to attach you, Status: %s | Reason: %", status, message), player)
         end
     end)
 end)
@@ -349,23 +372,6 @@ AddEventHandler('ImperialCAD:ClearPanic', function()
         end
     end)
 end)
-
-function Notify(message, playerId)
-    if playerId and message then
-        if Config.debug then print("[ImperialCAD] Trying to notify player: "..playerId) end
-        TriggerClientEvent('chat:addMessage', playerId, {
-         color = {255, 0, 0},
-         multiline = true,
-         args = {"ImperialCAD", message}
-        })
-    elseif not message then
-        print("[IMPERIAL_SV_NOTIFY] No message provided")
-    elseif not playerId then
-        print("[IMPERIAL_SV_NOTIFY] No playerId provided")
-    else
-        print("[IMPERIAL_SV_NOTIFY] Couldnt send message")
-    end
-end
 
 RegisterNetEvent("ImperialCAD:Server:NewNotify")
 AddEventHandler("ImperialCAD:Server:NewNotify", function(callData)

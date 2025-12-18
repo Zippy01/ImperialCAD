@@ -62,6 +62,7 @@ end
 
 RegisterNetEvent('ErsIntegration::OnFirstNPCInteraction')
 AddEventHandler('ErsIntegration::OnFirstNPCInteraction', function(source, data, context)
+    if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
     if Config.debug then print("Received ERS ped info", json.encode(data)) end
     local name = data.FirstName .. " " .. data.LastName
 
@@ -73,13 +74,22 @@ if not pedRegistered then
     local DLStatus = string.upper(pdata.License_Car)
     local CDLStatus = string.upper(pdata.License_Truck)
 
-    local licenseStatus = DLStatus == "INTERNATIONAL LICENSE (VALID)" and "ACTIVE"
-              or DLStatus == "REPORTED STOLEN (VALID)" and "REVOKED" or DLStatus == "VALID" and "ACTIVE"
-              or "NONE"
+    local licenseMap = {
+    ["VALID"] = "ACTIVE",
+    ["INTERNATIONAL LICENSE (VALID)"] = "ACTIVE",
+    ["REPORTED STOLEN (VALID)"] = "REVOKED",
 
-    local CLicenseStatus = CDLStatus == "INTERNATIONAL LICENSE (VALID)" and "ACTIVE"
-              or CDLStatus == "REPORTED STOLEN (VALID)" and "REVOKED" or CDLStatus == "VALID" and "ACTIVE"
-              or "NONE"
+    ["EXPIRED"] = "EXPIRED",
+    ["SUSPENDED"] = "SUSPENDED",
+    ["REVOKED"] = "REVOKED",
+
+    ["NONE"] = "NONE",
+    ["N/A"] = "NONE",
+    [""] = "NONE",
+    }
+
+    local licenseStatus = licenseMap[DLStatus] or "NONE"
+    local CLicenseStatus = licenseMap[CDLStatus] or "NONE"
 
     NewCharacterAdvanced({
         commId = GetConvar("imperial_community_id", ""),
@@ -145,7 +155,8 @@ end) -- Checking ped registry
 RegisterNetEvent('ErsIntegration::OnFirstVehicleInteraction')
 AddEventHandler('ErsIntegration::OnFirstVehicleInteraction', function(source, data, context)
     if Config.debug then print("[IMPERIAL_ERS] Received ERS vehicle info", json.encode(data)) end
-
+    if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
+    
     local fullName = data.owner_name
 
 -- Use pattern matching to split into first and last?? idk trying it tho
@@ -217,6 +228,7 @@ end)
 RegisterNetEvent('ErsIntegration::OnAcceptedCalloutOffer')
 AddEventHandler('ErsIntegration::OnAcceptedCalloutOffer', function(callData)
     if Config.debug then print("Received accepeted calloutoffer from ERS") end
+    if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
 local ers = callData
 local src = source
 
@@ -256,19 +268,22 @@ end)
 RegisterNetEvent('ErsIntegration::OnArrivedAtCallout')
 AddEventHandler('ErsIntegration::OnArrivedAtCallout', function(callData)
     if Config.debug then print("Received arrived at callout from ERS") end
+    if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
 end)
 
 if Config.UseERSCalloutEnded then
 RegisterNetEvent('ErsIntegration::OnEndedACallout')
 AddEventHandler('ErsIntegration::OnEndedACallout', function()
+    local src = source
     if Config.debug then print("Received ended a callout from ERS") end
-    local call = getCall(source)
+    if not IsUnitOnDuty(src) then if Config.debug then print(src, "unit is not on duty with imperial ignoring ers") end return end
+    local call = getCall(src)
 
     if call then
-        if Config.debug then print('There is a ers call number saved, trying to delete it then') end
+        if Config.debug then print('There is a ers call number saved, trying to delete it') end
         exports["ImperialCAD"]:DeleteCall({
         callId = call,
-        discordid = getDiscordId(source),
+        discordId = getDiscordId(src),
         }, function(success, resultData)
             if success then
              if Config.debug then print("^1[IMPERIAL_ERS]^7 Call deleted, call ended by ERS") end
@@ -276,7 +291,7 @@ AddEventHandler('ErsIntegration::OnEndedACallout', function()
              if Config.debug then print("^1[IMPERIAL_ERS_error]^7 Unable to delete, call ended by ERS") end
             end
         end)
-        removeCall(source)
+        removeCall(src)
     else
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end
@@ -286,14 +301,16 @@ end
 if Config.UseERSCalloutCompletedSuccesfully then
 RegisterServerEvent("ErsIntegration::OnCalloutCompletedSuccesfully")
 AddEventHandler("ErsIntegration::OnCalloutCompletedSuccesfully", function(calloutData)
+    local src = source
     if Config.debug then print("Received ended a callout from ERS") end
-    local call = getCall(source)
+    if not IsUnitOnDuty(src) then if Config.debug then print(src, "unit is not on duty with imperial ignoring ers") end return end
+    local call = getCall(src)
 
     if call then
         if Config.debug then print('There is a ers call number saved, trying to delete it then') end
         exports["ImperialCAD"]:DeleteCall({
         callId = call,
-        discordid = getDiscordId(source),
+        discordId = getDiscordId(src),
         }, function(success, resultData)
             if success then
              if Config.debug then print("^1[IMPERIAL_ERS]^7 Call deleted, call ended by ERS") end
@@ -301,7 +318,7 @@ AddEventHandler("ErsIntegration::OnCalloutCompletedSuccesfully", function(callou
              if Config.debug then print("^1[IMPERIAL_ERS_error]^7 Unable to delete, call ended by ERS") end
             end
         end)
-        removeCall(source)
+        removeCall(src)
     else
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end
@@ -313,6 +330,7 @@ AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
     local src = source
 
     if Config.debug then print("Received started a pullover from ERS") end
+    if not IsUnitOnDuty(src) then if Config.debug then print(src, "unit is not on duty with imperial ignoring ers") end return end
 
     local ped = GetPlayerPed(src)
     local Coords
@@ -321,18 +339,18 @@ AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
 
     if ped and ped ~= 0 then
          Coords = GetEntityCoords(ped)
-        if Config.debug then print(("Player %s coords: x=%.2f, y=%.2f, z=%.2f"):format(source, Coords.x, Coords.y, Coords.z)) end
+        if Config.debug then print(("Player %s coords: x=%.2f, y=%.2f, z=%.2f"):format(src, Coords.x, Coords.y, Coords.z)) end
     else
-        if Config.debug then print("No ped found for player " .. source) end
+        if Config.debug then print("No ped found for player " .. src) end
     end
 
-    local streetData = lib.callback.await('ImperialCAD:getNearestStreets', source, Coords)
+    local streetData = lib.callback.await('ImperialCAD:getNearestStreets', src, Coords)
 
     local street = streetData.street
     local crossStreet = streetData.crossStreet or nil
 
         exports["ImperialCAD"]:CreateCall({
-        users_discordID = getDiscordId(source),
+        users_discordId = getDiscordId(src),
         street = street,
         cross_street = crossStreet,
         postal = exports["ImperialCAD"]:getNearestPostalFromCoords(Coords),
@@ -366,13 +384,14 @@ AddEventHandler("ErsIntegration::OnPulloverEnded", function(pedData, vehicleData
     local src = source
 
     if Config.debug then print("Received ended a pullover from ERS") end
-    local call = getCall(source)
+    if not IsUnitOnDuty(src) then if Config.debug then print(src, "unit is not on duty with imperial ignoring ers") end return end
+    local call = getCall(src)
 
     if call then
         if Config.debug then print('There is a ers call number saved, trying to delete it then') end
         exports["ImperialCAD"]:DeleteCall({
         callId = call,
-        discordid = getDiscordId(source),
+        discordId = getDiscordId(src),
         }, function(success, resultData)
             if success then
              if Config.debug then print("^1[IMPERIAL_ERS]^7 Call deleted, call ended by ERS") end
@@ -380,7 +399,7 @@ AddEventHandler("ErsIntegration::OnPulloverEnded", function(pedData, vehicleData
              if Config.debug then print("^1[IMPERIAL_ERS_error]^7 Unable to delete, call ended by ERS") end
             end
         end)
-        removeCall(source)
+        removeCall(src)
     else
         if Config.debug then print('There is not a ers call number locally saved, not trying to delete it') end
     end

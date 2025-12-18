@@ -23,37 +23,72 @@ local function performAPIRequest(url, method, data, headers, callback)
     end
 
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders, errorData)
-        if errorCode ~= 200 then
+    if errorCode ~= 200 then
 
-            if Config.debug then
-            print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
-            end
-
-            if callback then
-                if errorData then
-                callback(false, errorData:match("{.*}"))
-                else
-                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
-                end
-            end
-
+        if errorCode == 500 then
+            callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: Temporary Internal Error, Unable to retreive CAD data.")
             return
+        end
 
+        if Config.debug then
+            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code:", errorCode)
+            if errorData and errorData ~= "" then
+                print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
+            elseif resultData and resultData ~= "" then
+                print("^1[IMPERIAL_API_ERROR]^7 Result Data (fallback): " .. resultData)
+            end
         end
 
         if callback then
-            if resultData then
-            callback(true, resultData)
+            if errorData and errorData ~= "" then
+                local jsonPart = errorData:match("{.*}")
+                if jsonPart then
+                    callback(false, jsonPart)
+                else
+                    callback(false, errorData)
+                end
             else
-            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
             end
         end
-        
+
+        return
+    end
+
+    local status
+    if resultData and resultData ~= "" then
+        local ok, body = pcall(json.decode, resultData)
+        if ok and type(body) == "table" then
+            status = body.status -- "error", "RATE_LIMIT", "success", "BUSY", "LIMIT_REACHED", "USER_LIMIT", "RESERVED"
+        end
+    end
+
+    if status and status ~= "success" then
         if Config.debug then
-            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. resultData) 
+            print("^1[IMPERIAL_API_STATUS]^7 Non-success status in 200 response:", status)
+            print("^1[IMPERIAL_API_STATUS]^7 Raw Result Data:", resultData)
         end
 
-    end, method, data, headers) 
+        if callback then
+            callback(false, resultData or ("Status: " .. tostring(status)))
+        end
+
+        return
+    end
+
+    if callback then
+        if resultData and resultData ~= "" then
+            callback(true, resultData)
+        else
+            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+        end
+    end
+
+    if Config.debug then
+            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. tostring(resultData))
+    end
+
+end, method, data, headers)
 end
 
 function NewCharacter(data, callback)
@@ -173,7 +208,7 @@ function GetCharacter(charid, commId, callback)
     )
 
     performAPIRequest(url, "GET", nil, nil, function(success, response)
-        if success then
+        if response then
             local data = json.decode(response)
             if data.status == "success" then
                 print("Character retrieved: " .. json.encode(data))
@@ -215,7 +250,7 @@ function GetCharacterAdvanced(Character, callback)
     )
 
     performAPIRequest(url, "GET", nil, nil, function(success, response)
-        if success then
+        if response then
             local data = json.decode(response)
             if data.status == "success" then
                 print("[ADVANCED] Character retrieved: " .. json.encode(data.response))

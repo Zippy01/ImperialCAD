@@ -187,7 +187,7 @@ if Config.TsThroughChat then
 
     if Config.AttachThroughChat then
         TriggerEvent('chat:addSuggestion', '/attach', 'Attach to a ImperialCAD call', {
-            { name = "callnum", help = "Call number to attach to" }
+            { name = "callnum", help = "Call number to attach" }
         })
     
         RegisterCommand('attach', function(source, args, rawCommand)

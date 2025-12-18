@@ -16,34 +16,66 @@ checkConvar("imperialAPI", "Imperial API key")
 
 local function performAPIRequest(url, data, headers, callback)
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders, errorData)
-        if errorCode ~= 200 then
-
-            if Config.debug then
-            print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
-            end
-
-            if callback then
-                if errorData then
-                callback(false, errorData:match("{.*}"))
-                else
-                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
-                end
-            end
-
+    if errorCode ~= 200 then
+        
+        if errorCode == 500 then
+            callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: ImperialCAD is having trouble, Unable to retreive CAD data.")
             return
+        end
 
+        if Config.debug then
+            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code:", errorCode)
+            if errorData and errorData ~= "" then
+                print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
+            elseif resultData and resultData ~= "" then
+                print("^1[IMPERIAL_API_ERROR]^7 Result Data (fallback): " .. resultData)
+            end
         end
 
         if callback then
-            if resultData then
-            callback(true, resultData)
+            if errorData and errorData ~= "" then
+                local jsonPart = errorData:match("{.*}")
+                if jsonPart then
+                    callback(false, jsonPart)
+                else
+                    callback(false, errorData)
+                end
             else
-            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
             end
         end
-        
+
+        return
+    end
+
+    local status
+    if resultData and resultData ~= "" then
+        local ok, body = pcall(json.decode, resultData)
+        if ok and type(body) == "table" then
+            status = body.status -- "error", "RATE_LIMIT", "success", "BUSY", "LIMIT_REACHED", "USER_LIMIT", "RESERVED", etc.
+        end
+    end
+
+    if status and status ~= "success" then
         if Config.debug then
-            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. resultData) 
+            print("^1[IMPERIAL_API_STATUS]^7 Non-success Result Data:", resultData)
+         end
+        if callback then
+            callback(false, resultData or ("Status: " .. tostring(status)))
+        end
+        return
+    end
+
+    if callback then
+        if resultData and resultData ~= "" then
+            callback(true, resultData)
+        else
+            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+        end
+    end
+
+    if Config.debug then
+            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. tostring(resultData))
         end
 
     end, 'POST', json.encode(data), headers)
@@ -75,7 +107,7 @@ end
 function DeleteCall(data, callback)
     local data = {
         callId = data.callId,
-        discordid = data.discordId,
+        discordId = data.discordId,
         communityId = GetConvar("imperial_community_id", "")
     }
     local headers = {
@@ -85,7 +117,7 @@ function DeleteCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallDelete", data, headers, callback)
 
     if Config.debug then
-    print("[Imperial_Export_DeleteCall] Attemping to delete a 911 call!")
+    print("[Imperial_Export_DeleteCall] Attemping to delete a call!")
     end
 
 end

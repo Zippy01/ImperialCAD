@@ -8,8 +8,8 @@ local webhookURL = Config.WebhookURL
 local disabled = Config.DisableDutyCommand
 
 RegisterNetEvent("Imperial:AddUnitOnDuty")
-AddEventHandler("Imperial:AddUnitOnDuty", function(job, src)
-    local serverId = src or source
+AddEventHandler("Imperial:AddUnitOnDuty", function(job, target)
+    local serverId = target or source
     table.insert(OnDutyUnits, serverId)
     local jobName = "Unkown"
 
@@ -50,8 +50,8 @@ AddEventHandler("Imperial:AddUnitOnDuty", function(job, src)
 end)
 
 RegisterNetEvent("Imperial:RemoveUnitOnDuty")
-AddEventHandler("Imperial:RemoveUnitOnDuty", function(job, src)
-    local serverId = src or source
+AddEventHandler("Imperial:RemoveUnitOnDuty", function(job, target)
+    local serverId = target or source
     local jobName = "Unkown" 
 
     for i, unitId in ipairs(OnDutyUnits) do
