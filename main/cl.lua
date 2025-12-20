@@ -58,11 +58,11 @@ RegisterCommand('911', function(source, args)
     
 end, false)
 
-TriggerEvent('chat:addSuggestion', '/A911', 'Call Emergency Services but Anonymously', {
+TriggerEvent('chat:addSuggestion', '/a911', 'Call Emergency Services but Anonymously', {
     { name = "Information", help = "Description of your call." }
 })
 
-RegisterCommand('A911', function(source, args)
+RegisterCommand('a911', function(source, args)
     local message = table.concat(args, " ")
     local playerPed = PlayerPedId()
     local coords = GetEntityCoords(playerPed)

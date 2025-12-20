@@ -166,14 +166,14 @@ AddEventHandler("playerDropped", function(reason)
 end)
 
 function IsUnitOnDuty(serverId)
-    for i, unitId in ipairs(OnDutyUnits) do
+    for _, unitId in ipairs(OnDutyUnits) do
         if unitId == serverId then
             return true
-        else
-            return false
         end
     end
+    return false
 end
+
 
 function GetOnDutyUnits()
     return OnDutyUnits
