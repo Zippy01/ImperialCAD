@@ -13,6 +13,15 @@ function GenerateRandomString(length)
         return result
 end
 
+function GenerateDate(future)
+    local now = os.time()
+    local months = math.random(2, 24)
+    local offset = months * 30 * 24 * 60 * 60 -- approx months in seconds
+    local target = future and (now + offset) or (now - offset)
+    local d = os.date("*t", target)
+    return ("%02d/%02d/%d"):format(d.month, d.day, d.year)
+end
+
 --trys to find the discord ID
 function getDiscordId(src)
     if src == nil then return false end

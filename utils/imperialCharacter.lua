@@ -13,6 +13,42 @@ end
 checkConvar("imperial_community_id", "ImperialCAD Community ID")
 checkConvar("imperialAPI", "Imperial API key")
 
+local function debugLog(message)
+    if Config.debug then
+        print("[ImperialCAD] " .. message)
+    end
+end
+
+local function sendCallback(callback, success, payload, context)
+    if not callback then return end
+
+    local ok, err = pcall(callback, success, payload)
+    if not ok then
+        print(("[ImperialCAD] %s callback failed: %s"):format(context or "API", tostring(err)))
+    end
+end
+
+local function urlEncode(value)
+    return tostring(value or ""):gsub("([^%w%-_%.~])", function(char)
+        return string.format("%%%02X", string.byte(char))
+    end)
+end
+
+local function decodeJsonResponse(raw, context)
+    if not raw or raw == "" then
+        print("[ImperialCAD] Empty response while decoding " .. context .. ".")
+        return nil
+    end
+
+    local ok, decoded = pcall(json.decode, raw)
+    if not ok or type(decoded) ~= "table" then
+        print("[ImperialCAD] Invalid JSON response while decoding " .. context .. ".")
+        return nil
+    end
+
+    return decoded
+end
+
 local function performAPIRequest(url, method, data, headers, callback) 
     method = method:upper()
     
@@ -26,29 +62,27 @@ local function performAPIRequest(url, method, data, headers, callback)
     if errorCode ~= 200 then
 
         if errorCode == 500 then
-            callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: Temporary Internal Error, Unable to retreive CAD data.")
+            sendCallback(callback, false, "[ImperialCAD] CAD returned a temporary internal error.", "API request")
             return
         end
 
-        if Config.debug then
-            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code:", errorCode)
-            if errorData and errorData ~= "" then
-                print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
-            elseif resultData and resultData ~= "" then
-                print("^1[IMPERIAL_API_ERROR]^7 Result Data (fallback): " .. resultData)
-            end
+        debugLog(("Request failed with HTTP code %s."):format(tostring(errorCode)))
+        if Config.debug and errorData and errorData ~= "" then
+            print("[ImperialCAD] Error response: " .. errorData)
+        elseif Config.debug and resultData and resultData ~= "" then
+            print("[ImperialCAD] Response body: " .. resultData)
         end
 
         if callback then
             if errorData and errorData ~= "" then
                 local jsonPart = errorData:match("{.*}")
                 if jsonPart then
-                    callback(false, jsonPart)
+                    sendCallback(callback, false, jsonPart, "API request")
                 else
-                    callback(false, errorData)
+                    sendCallback(callback, false, errorData, "API request")
                 end
             else
-                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
+                sendCallback(callback, false, "[ImperialCAD] Request failed without response data.", "API request")
             end
         end
 
@@ -64,13 +98,13 @@ local function performAPIRequest(url, method, data, headers, callback)
     end
 
     if status and status ~= "success" then
-        if Config.debug then
-            print("^1[IMPERIAL_API_STATUS]^7 Non-success status in 200 response:", status)
-            print("^1[IMPERIAL_API_STATUS]^7 Raw Result Data:", resultData)
+        debugLog(("CAD returned status '%s'."):format(tostring(status)))
+        if Config.debug and resultData then
+            print("[ImperialCAD] Response body: " .. resultData)
         end
 
         if callback then
-            callback(false, resultData or ("Status: " .. tostring(status)))
+            sendCallback(callback, false, resultData or ("Status: " .. tostring(status)), "API request")
         end
 
         return
@@ -78,15 +112,13 @@ local function performAPIRequest(url, method, data, headers, callback)
 
     if callback then
         if resultData and resultData ~= "" then
-            callback(true, resultData)
+            sendCallback(callback, true, resultData, "API request")
         else
-            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+            sendCallback(callback, true, "[ImperialCAD] Request succeeded without response data.", "API request")
         end
     end
 
-    if Config.debug then
-            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. tostring(resultData))
-    end
+    debugLog("Request completed successfully.")
 
 end, method, data, headers)
 end
@@ -120,11 +152,13 @@ function NewCharacter(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/NewCharacter", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport] Attemping to create a new civilian CAD character!")
+       print("[ImperialExport] Attempting to create a new civilian CAD character.")
     end
 end
 
 function NewCharacterAdvanced(data, callback)
+    local licenseDetails = data.licensedetails or {}
+    local misc = data.misc or {}
     local requestData = {
         commId = GetConvar("imperial_community_id", ""),
         Fname = data.Fname,
@@ -144,19 +178,19 @@ function NewCharacterAdvanced(data, callback)
         state = data.state,
         phonenum = data.phonenum,
         licensedetails = {
-            hasBoatLic = data.licensedetails.hasBoatLic,
-            hasCDL = data.licensedetails.hasCDL,
-            CDLNumber = data.licensedetails.CDLNumber,
-            CDLStatus = data.licensedetails.CDLStatus,
-            hasDL = data.licensedetails.hasDL,
-            DLNumber = data.licensedetails.DLNumber,
-            DLStatus = data.licensedetails.DLStatus,
-            hasFirearmsCertification = data.licensedetails.hasFirearmsCertification,
-            hasFishLic = data.licensedetails.hasFishLic,
-            hasHuntLic = data.licensedetails.hasHuntLic
+            hasBoatLic = licenseDetails.hasBoatLic,
+            hasCDL = licenseDetails.hasCDL,
+            CDLNumber = licenseDetails.CDLNumber,
+            CDLStatus = licenseDetails.CDLStatus,
+            hasDL = licenseDetails.hasDL,
+            DLNumber = licenseDetails.DLNumber,
+            DLStatus = licenseDetails.DLStatus,
+            hasFirearmsCertification = licenseDetails.hasFirearmsCertification,
+            hasFishLic = licenseDetails.hasFishLic,
+            hasHuntLic = licenseDetails.hasHuntLic
         },
         misc = {
-            missing = data.misc.missing
+            missing = misc.missing
         }
     }
     local headers = {
@@ -166,7 +200,7 @@ function NewCharacterAdvanced(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/NewAdvancedCharacter", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport] Attemping to create a new civilian CAD character!")
+       print("[ImperialExport] Attempting to create a new civilian CAD character.")
     end
 end
 
@@ -183,7 +217,7 @@ function DeleteCharacter(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/DeleteCharacter", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport] Attemping to delete civilian CAD character!")
+       print("[ImperialExport] Attempting to delete a civilian CAD character.")
     end
 end
 
@@ -203,13 +237,17 @@ function GetCharacter(charid, commId, callback)
 
     local url = string.format(
         "http://imperialcad.app/api/1.1/wf/GetCharacter?charid=%s&commId=%s",
-        charid,
-        commId
+        urlEncode(charid),
+        urlEncode(commId)
     )
 
     performAPIRequest(url, "GET", nil, nil, function(success, response)
         if response then
-            local data = json.decode(response)
+            local data = decodeJsonResponse(response, "character lookup")
+            if not data then
+                if callback then callback(false, "Invalid character lookup response") end
+                return
+            end
             if data.status == "success" then
                 print("Character retrieved: " .. json.encode(data))
                 if callback then callback(true, data) end
@@ -244,14 +282,18 @@ function GetCharacterAdvanced(Character, callback)
 
     local url = string.format(
         "http://imperialcad.app/api/1.1/wf/GetCharacterAdvanced?firstname=%s&lastname=%s&commId=%s",
-        firstname,
-        lastname,
-        commId
+        urlEncode(firstname),
+        urlEncode(lastname),
+        urlEncode(commId)
     )
 
     performAPIRequest(url, "GET", nil, nil, function(success, response)
         if response then
-            local data = json.decode(response)
+            local data = decodeJsonResponse(response, "advanced character lookup")
+            if not data then
+                if callback then callback(false, "Invalid advanced character lookup response") end
+                return
+            end
             if data.status == "success" then
                 print("[ADVANCED] Character retrieved: " .. json.encode(data.response))
                 if callback then callback(true, data) end
@@ -286,7 +328,7 @@ function CreateVehicle(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/registerVehicle", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport] Attemping to reigster " .. data.plate .. " to CAD!")
+       print("[ImperialExport] Attempting to register " .. data.plate .. " to CAD.")
     end
 end
 
@@ -303,7 +345,7 @@ function SetActiveCiv(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/setActiveCivilian", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print(string.format("[ImperialExport] Attemping to set ssn %s as active civ for %s in CAD!", data.ssn, data.users_discordID))
+       print(string.format("[ImperialExport] Attempting to set SSN %s as active civ for %s in CAD.", data.ssn, data.users_discordID))
     end
 end
 
@@ -343,7 +385,7 @@ function CreateVehicleAdvanced(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/registeradvancedvehicle", "POST", requestData, headers, callback)
     
     if Config.debug then
-       print("[ImperialExport_AdvancedVehReg] Attemping to register " .. requestData.vehicleData.plate .. " to CAD!")
+       print("[ImperialExport_AdvancedVehReg] Attempting to register " .. requestData.vehicleData.plate .. " to CAD.")
     end
 end
 

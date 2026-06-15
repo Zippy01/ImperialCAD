@@ -8,8 +8,8 @@ local playerLocationData = {}
 local function loadData(fileName)
     local file = LoadResourceFile(GetCurrentResourceName(), fileName)
     if file then
-        local data = json.decode(file)
-        if data then
+        local ok, data = pcall(json.decode, file)
+        if ok and type(data) == "table" then
             print("Loaded " .. fileName .. " successfully with " .. #data .. " entries.")
             return data
         else
@@ -44,9 +44,22 @@ end
 RegisterNetEvent('ImperialLocation:updateNearest')
 AddEventHandler('ImperialLocation:updateNearest', function(playerCoords, shouldDisplay)
     local src = source
-    local nearestPostal = getNearestLocation(playerCoords, postals)
-    local nearestCity = getNearestLocation(playerCoords, cities)
-    local nearestCounty = getNearestLocation(playerCoords, counties)
+    local ped = GetPlayerPed(src)
+    local coords = playerCoords
+
+    if ped and ped ~= 0 then
+        local serverCoords = GetEntityCoords(ped)
+        coords = {x = serverCoords.x, y = serverCoords.y}
+    end
+
+    if not coords or not coords.x or not coords.y then
+        if Config.debug then print("[ImperialLocation] Missing coordinates for player " .. src .. ".") end
+        return
+    end
+
+    local nearestPostal = getNearestLocation(coords, postals)
+    local nearestCity = getNearestLocation(coords, cities)
+    local nearestCounty = getNearestLocation(coords, counties)
 
     playerLocationData[src] = {
         postal = nearestPostal,

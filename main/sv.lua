@@ -23,6 +23,21 @@ end
 local versionUrl = 'https://raw.githubusercontent.com/Zippy01/ImperialCAD/main/version.json'
 local latestVersion = "0.0.0.0"
 
+local function decodeJsonResponse(raw, context)
+    if not raw or raw == "" then
+        if Config.debug then print("[ImperialCAD] Empty response while decoding " .. context .. ".") end
+        return nil
+    end
+
+    local ok, decoded = pcall(json.decode, raw)
+    if not ok or type(decoded) ~= "table" then
+        print("[ImperialCAD] Invalid JSON response while decoding " .. context .. ".")
+        return nil
+    end
+
+    return decoded
+end
+
 local function checkForUpdates()
     local currentVersion = getVersionFromManifest()
     local debugMode = Config.debug and "^2Enabled^7" or "^1Disabled^7"
@@ -113,7 +128,6 @@ AddEventHandler('playerDropped', function(reason, resourceName, clientDropReason
         users_discordID = discordId
      }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
             if Config.debug then
             print("[ImperialCleanup] Player was successfully marked off duty, and cleaned up in the CAD")
             end
@@ -129,7 +143,7 @@ end
 RegisterNetEvent('ImperialCAD:New911')
 AddEventHandler('ImperialCAD:New911', function(callData)
 
-    if not callData.name or not callData.street or not callData.crossStreet or not callData.postal or not callData.info then
+    if type(callData) ~= "table" or not callData.name or not callData.street or not callData.crossStreet or not callData.postal or not callData.info then
         print("[Imperial911] Missing required call data to create a new 911 call, Will not create.")
         return  
     end
@@ -146,7 +160,7 @@ AddEventHandler('ImperialCAD:New911', function(callData)
         county = callData.county
     }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
+            local apires = decodeJsonResponse(resultData, "911 call create")
             if not apires or not apires.response or not apires.response.callId then
                 print("^1[API_ERROR]^7 Invalid response or call ID not found")
                 return false
@@ -176,7 +190,7 @@ end)
 
 function Notify(message, playerId)
     if playerId and message then
-        if Config.debug then print("[ImperialCAD] Trying to notify player: "..playerId) end
+        if Config.debug then print("[ImperialCAD] Sending notification to player " .. playerId) end
         TriggerClientEvent('chat:addMessage', playerId, {
          color = {255, 0, 0},
          multiline = true,
@@ -195,76 +209,130 @@ if Config.PlateThroughChat then
 RegisterNetEvent('ImperialCAD:CheckPlate')
 AddEventHandler('ImperialCAD:CheckPlate', function(callData)
     local src = source
+    local plate = callData and callData.plate
 
     if Config.debug then
-        print("[ImperialRplate] Checking plate: " .. callData.plate.." on the server side")
+        print("[ImperialCAD] Plate lookup requested: " .. tostring(plate))
     end
 
-    if not callData.plate then
-        print("[ImperialRplate] Request made without plate, killing early")
+    if not plate or plate == "" then
+        print("[ImperialCAD] Plate lookup skipped: missing plate.")
         return
     end
 
     exports["ImperialCAD"]:CheckPlate({
-        plate = callData.plate
+        plate = plate
     }, function(success, resultData)
         if not success or not resultData then
-            Notify(""..callData.plate.." Was ran without a successful result, is it registered?", src)
+            if Config.debug then
+                print("[ImperialCAD] Plate lookup failed for " .. plate .. ".")
+            end
+            Notify("Plate lookup failed for " .. plate .. ". Is it registered?", src)
+            return
         end
 
-        local data = json.decode(resultData)
-        if not data then
-            print("[ImperialRplate] Invalid API response, Killing early")
+        local decoded, data = pcall(json.decode, resultData)
+        if not decoded or type(data) ~= "table" then
+            print("[ImperialCAD] Plate lookup returned invalid JSON for " .. plate .. ".")
+            Notify("Plate lookup returned an invalid CAD response for " .. plate .. ".", src)
             return
         end
 
         local response = data.response
+        if type(response) ~= "table" then
+            print("[ImperialCAD] Plate lookup returned no vehicle data for " .. plate .. ".")
+            Notify("Plate lookup found no vehicle data for " .. plate .. ".", src)
+            return
+        end
+
         local messages = {}
+        local missingFields = {}
 
-        if success and resultData then 
-            Notify("The following flags/alerts where found for plate: " .. response.plate, src) -- @TODO
+        local function getPlateField(label, ...)
+            local names = {...}
+
+            for _, name in ipairs(names) do
+                if response[name] ~= nil then
+                    return response[name]
+                end
+            end
+
+            for key, value in pairs(response) do
+                local lowerKey = string.lower(tostring(key))
+                for _, name in ipairs(names) do
+                    if lowerKey == string.lower(name) then
+                        return value
+                    end
+                end
+            end
+
+            table.insert(missingFields, label)
+            return nil
         end
 
-        if not success or not resultData then
-            table.insert(messages, "Could not find vehicle with the plate: "..callData.plate)
+        local owner = getPlateField("owner", "owner", "Owner")
+        local resultPlate = getPlateField("plate", "plate", "Plate") or plate
+        local stolen = getPlateField("stolen", "stolen", "Stolen")
+        local insurance = getPlateField("insurance", "insurance", "Insurance")
+        local insuranceStatus = getPlateField("insurance_status", "insurance_status", "insuranceStatus", "InsuranceStatus")
+        local business = getPlateField("business", "business", "Business")
+        local expStatus = getPlateField("expStatus", "expStatus", "exp_status", "ExpStatus")
+        local ownerWanted = getPlateField("owner_wanted", "owner_wanted", "ownerWanted", "OwnerWanted")
+        local ownerDlStatus = getPlateField("owner_dl_status", "owner_dl_status", "ownerDlStatus", "OwnerDLStatus")
+        local vin = getPlateField("vin", "vin", "VIN", "Vin")
+
+        if Config.debug then
+            print("[ImperialCAD] Plate lookup succeeded: " .. resultPlate)
+            if owner then print("[ImperialCAD] Plate owner: " .. tostring(owner)) end
+            if vin then print("[ImperialCAD] Plate VIN: " .. tostring(vin)) end
+            if #missingFields > 0 then
+                print("[ImperialCAD] Plate response missing fields: " .. table.concat(missingFields, ", "))
+            end
         end
 
-        if success then -- If api returns success then check the actual return
-
-        if response.stolen then
+        if stolen == true then
             table.insert(messages, "Stolen Vehicle")
         end
 
-        if not response.insurance then
+        if insurance ~= true then
             table.insert(messages, "No Insurance")
         end
 
-        if response.insurance and response.insurance_status ~= "ACTIVE" then
+        if insurance == true and insuranceStatus and insuranceStatus ~= "ACTIVE" then
             table.insert(messages, "Invalid Insurance")
         end
 
-        if response.business then
+        if business == true then
             table.insert(messages, "Commercial Vehicle")
         end
 
-        if response.reg_status ~= "ACTIVE" then
+        if expStatus == false then
             table.insert(messages, "Invalid Vehicle registration")
         end
 
-        if response.owner_wanted then
+        if ownerWanted == true then
             table.insert(messages, "Owner Wanted")
         end
 
-        if response.owner_dl_status ~= "ACTIVE" then
+        if ownerDlStatus and ownerDlStatus ~= "ACTIVE" then
             table.insert(messages, "Invalid license")
         end
 
-    end -- end of the addtional checks
+        local detailMessage = "Plate " .. resultPlate
+        if owner then
+            detailMessage = detailMessage .. " | Owner: " .. tostring(owner)
+        end
+        if vin then
+            detailMessage = detailMessage .. " | VIN: " .. tostring(vin)
+        end
+        Notify(detailMessage, src)
 
-    if #messages > 0 then
-        print("It should work btw "..src)
-        TriggerClientEvent('ImperialCAD:Client:Notify', src, json.encode(messages))
-    end
+        if #messages > 0 then
+            Notify("The following flags/alerts were found for plate: " .. resultPlate, src)
+            TriggerClientEvent('ImperialCAD:Client:Notify', src, json.encode(messages))
+        else
+            Notify("No flags or alerts found for plate: " .. resultPlate, src)
+        end
     
     end)
 end)
@@ -273,6 +341,10 @@ end
 RegisterNetEvent('ImperialCAD:TrafficStop')
 AddEventHandler('ImperialCAD:TrafficStop', function(callData)
     local player = source
+    if type(callData) ~= "table" then
+        Notify("[TS] Unable to create traffic stop", player)
+        return
+    end
 
     exports["ImperialCAD"]:CreateCall({
         users_discordID = getDiscordId(source),
@@ -287,7 +359,7 @@ AddEventHandler('ImperialCAD:TrafficStop', function(callData)
         priority = Config.trafficspriority
     }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
+            local apires = decodeJsonResponse(resultData, "traffic stop create")
             if not apires or not apires.response or not apires.response.callId then
                 if Config.debug then print("^1[ERROR]^7 Invalid response or call ID not found") end
                 Notify("[TS] Unable to create traffic stop", player)
@@ -306,11 +378,20 @@ end)
 RegisterNetEvent('ImperialCAD:AttachCall')
 AddEventHandler('ImperialCAD:AttachCall', function(callData)
 local player = source
+    if type(callData) ~= "table" or not callData.callnum then
+        Notify("[Attach] Missing call number", player)
+        return
+    end
+
     exports["ImperialCAD"]:AttachCall({
         users_discordID = getDiscordId(source),
         callnum = callData.callnum
     }, function(success, resultData)
-        local result = json.decode(resultData)
+        local result = decodeJsonResponse(resultData, "attach call")
+        if not result then
+            Notify("[Attach] Unable to attach you, invalid CAD response", player)
+            return
+        end
         local status = result.status
         local message = result.message
         local response = result.response
@@ -327,19 +408,22 @@ local player = source
         
         if not success then
             Notify(string.format("[Attach] Unable to attach you, reason: %s", status), player)
-        elseif success then
+        elseif success and response and response.callnum then
             Notify("[Attach] Attached to call number "..response.callnum, player)
+        elseif success then
+            Notify("[Attach] Attached to call, but CAD did not return a call number", player)
         elseif not success and Config.debug then
-            Notify(string.format("[Attach - Debug] Unable to attach you, Status: %s | Reason: %", status, message), player)
+            Notify(string.format("[Attach - Debug] Unable to attach you, Status: %s | Reason: %s", status, message), player)
         end
     end)
 end)
 
 RegisterNetEvent('ImperialCAD:CloseCall')
 AddEventHandler('ImperialCAD:CloseCall', function(callData)
+    if type(callData) ~= "table" or not callData.callId then return end
 
     exports["ImperialCAD"]:DeleteCall({
-        discordid = getDiscordId(source),
+        discordId = getDiscordId(source),
         callId = callData.callId,
     }, function(success, resultData)
     end)
@@ -347,6 +431,7 @@ end)
 
 RegisterNetEvent('ImperialCAD:Panic')
 AddEventHandler('ImperialCAD:Panic', function(callData)
+    if type(callData) ~= "table" then return end
 
     exports["ImperialCAD"]:Panic({
         users_discordID = getDiscordId(source),
@@ -408,7 +493,7 @@ AddEventHandler("ImperialCAD:Server:NewNotify", function(callData)
         priority = priority
     }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
+            local apires = decodeJsonResponse(resultData, "new dispatch create")
             if not apires or not apires.response or not apires.response.callId then
                 print("^1[API_ERROR]^7 Invalid response or call ID not found")
                 return false

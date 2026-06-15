@@ -14,34 +14,47 @@ end
 checkConvar("imperial_community_id", "ImperialCAD Community ID")
 checkConvar("imperialAPI", "Imperial API key")
 
+local function debugLog(message)
+    if Config.debug then
+        print("[ImperialCAD] " .. message)
+    end
+end
+
+local function sendCallback(callback, success, payload, context)
+    if not callback then return end
+
+    local ok, err = pcall(callback, success, payload)
+    if not ok then
+        print(("[ImperialCAD] %s callback failed: %s"):format(context or "API", tostring(err)))
+    end
+end
+
 local function performAPIRequest(url, data, headers, callback)
     PerformHttpRequest(url, function(errorCode, resultData, resultHeaders, errorData)
     if errorCode ~= 200 then
         
         if errorCode == 500 then
-            callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: ImperialCAD is having trouble, Unable to retreive CAD data.")
+            sendCallback(callback, false, "[ImperialCAD] CAD returned a temporary internal error.", "API request")
             return
         end
 
-        if Config.debug then
-            print("^1[IMPERIAL_API_ERROR]^7 HTTP Error Code:", errorCode)
-            if errorData and errorData ~= "" then
-                print("^1[IMPERIAL_API_ERROR]^7 Response: " .. errorData)
-            elseif resultData and resultData ~= "" then
-                print("^1[IMPERIAL_API_ERROR]^7 Result Data (fallback): " .. resultData)
-            end
+        debugLog(("Request failed with HTTP code %s."):format(tostring(errorCode)))
+        if Config.debug and errorData and errorData ~= "" then
+            print("[ImperialCAD] Error response: " .. errorData)
+        elseif Config.debug and resultData and resultData ~= "" then
+            print("[ImperialCAD] Response body: " .. resultData)
         end
 
         if callback then
             if errorData and errorData ~= "" then
                 local jsonPart = errorData:match("{.*}")
                 if jsonPart then
-                    callback(false, jsonPart)
+                    sendCallback(callback, false, jsonPart, "API request")
                 else
-                    callback(false, errorData)
+                    sendCallback(callback, false, errorData, "API request")
                 end
             else
-                callback(false, "^1[IMPERIAL_API_CALLBACK]^7 request failed: No response data")
+                sendCallback(callback, false, "[ImperialCAD] Request failed without response data.", "API request")
             end
         end
 
@@ -57,26 +70,25 @@ local function performAPIRequest(url, data, headers, callback)
     end
 
     if status and status ~= "success" then
-        if Config.debug then
-            print("^1[IMPERIAL_API_STATUS]^7 Non-success Result Data:", resultData)
-         end
+        debugLog(("CAD returned status '%s'."):format(tostring(status)))
+        if Config.debug and resultData then
+            print("[ImperialCAD] Response body: " .. resultData)
+        end
         if callback then
-            callback(false, resultData or ("Status: " .. tostring(status)))
+            sendCallback(callback, false, resultData or ("Status: " .. tostring(status)), "API request")
         end
         return
     end
 
     if callback then
         if resultData and resultData ~= "" then
-            callback(true, resultData)
+            sendCallback(callback, true, resultData, "API request")
         else
-            callback(true, "^1[IMPERIAL_API_CALLBACK]^7 request succeeded, But No response data was returned")
+            sendCallback(callback, true, "[ImperialCAD] Request succeeded without response data.", "API request")
         end
     end
 
-    if Config.debug then
-            print("^1[IMPERIAL_API_DEBUG]^7 Result Data: " .. tostring(resultData))
-        end
+    debugLog("Request completed successfully.")
 
     end, 'POST', json.encode(data), headers)
 end
@@ -99,7 +111,7 @@ function Create911Call(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/911", data, headers, callback)
     
     if Config.debug then
-       print("[Imperial_Export_Create911Call] Attemping to create a 911 call!")
+       print("[Imperial_Export_Create911Call] Attempting to create a 911 call.")
     end
 
 end
@@ -107,7 +119,7 @@ end
 function DeleteCall(data, callback)
     local data = {
         callId = data.callId,
-        discordId = data.discordId,
+        discordId = data.discordId or data.discordid,
         communityId = GetConvar("imperial_community_id", "")
     }
     local headers = {
@@ -117,7 +129,7 @@ function DeleteCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallDelete", data, headers, callback)
 
     if Config.debug then
-    print("[Imperial_Export_DeleteCall] Attemping to delete a call!")
+    print("[Imperial_Export_DeleteCall] Attempting to delete a call.")
     end
 
 end
@@ -127,7 +139,7 @@ function CreateCall(data, callback)
         commId = GetConvar("imperial_community_id", ""),
         users_discordID = data.users_discordID,
         street = data.street,
-        cross_street = data.crossStreet,
+        cross_street = data.crossStreet or data.cross_street,
         postal = data.postal,
         city = data.city,
         county = data.county,
@@ -143,7 +155,7 @@ function CreateCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallCreate", data, headers, callback)
 
     if Config.debug then
-      print("[Imperial_Export_CreateCall] Attemping to create a new call!")
+      print("[Imperial_Export_CreateCall] Attempting to create a new call.")
     end
 
 end
@@ -161,7 +173,7 @@ function AttachCall(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/AttachCall", data, headers, callback)
 
      if Config.debug then
-    print("[Imperial_Export_AttachCall] Attemping to attach player "..source.." to call "..data.callnum)
+    print("[Imperial_Export_AttachCall] Attempting to attach player " .. source .. " to call " .. data.callnum)
      end
 
 end
@@ -179,7 +191,7 @@ function NewCallNote(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/callnote", data, headers, callback)
 
     if Config.debug then
-      print("[Imperial_Export_NewCallNote] Attemping to create a new call note!")
+      print("[Imperial_Export_NewCallNote] Attempting to create a new call note.")
     end
 
 end
@@ -200,7 +212,7 @@ function Booter(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/offduty", data, headers, callback)
 
     if Config.debug then
-      print("[Imperial_Export_Booter] Attemping to boot a user from the cad!")
+      print("[Imperial_Export_Booter] Attempting to mark a user off duty in CAD.")
     end
 
 end
@@ -219,7 +231,7 @@ function Panic(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/panic", data, headers, callback)
 
     if Config.debug then
-     print("[Imperial_Export_Panic] Attemping to trigger a user panic in cad!")
+     print("[Imperial_Export_Panic] Attempting to trigger a user panic in CAD.")
     end
 
 end
@@ -235,32 +247,45 @@ function ClearPanic(callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/clearpanic", data, headers, callback)
 
     if Config.debug then
-     print("[Imperial_Export_ClearPanic] Attemping to to clear a community panic")
+     print("[Imperial_Export_ClearPanic] Attempting to clear a community panic.")
     end
 
 end
 
 function CheckPlate(data, callback)
-    local data = {
+    local plate = data and data.plate
+
+    if not plate or plate == "" then
+        sendCallback(callback, false, "[ImperialCAD] Plate lookup skipped: missing plate.", "CheckPlate")
+        return
+    end
+
+    local requestData = {
         communityId = GetConvar("imperial_community_id", ""),
-        plate = data.plate
+        plate = plate
     }
     local headers = {
         ["Content-Type"] = "application/json",
         ["APIKEY"] = GetConvar("imperialAPI", "")
     }
-    performAPIRequest("https://imperialcad.app/api/1.1/wf/checkplate", data, headers, callback)
+    performAPIRequest("https://imperialcad.app/api/1.1/wf/checkplate", requestData, headers, callback)
 
     if Config.debug then
-    print("[Imperial_Export_CheckPlate] Attempting to check the plate " .. data.plate)
+        print("[ImperialCAD] Checking plate " .. plate .. ".")
     end
 
 end
 
 function GetUnit(data, callback)
+    local discordId = data and data.users_discordID
+    if not discordId or discordId == "" then
+        sendCallback(callback, false, "[ImperialCAD] Unit lookup skipped: missing Discord ID.", "GetUnit")
+        return
+    end
+
     local data = {
         communityId = GetConvar("imperial_community_id", ""),
-        users_discordID = data.users_discordID
+        users_discordID = discordId
     }
     local headers = {
         ["Content-Type"] = "application/json",
@@ -269,7 +294,7 @@ function GetUnit(data, callback)
     performAPIRequest("https://imperialcad.app/api/1.1/wf/GetUnit", data, headers, callback)
 
     if Config.debug then
-    print("[Imperial_Export_CheckPlate] Attempting to get unit" .. data.plate)
+    print("[ImperialCAD] Attempting to get unit " .. discordId .. ".")
     end
 
 end

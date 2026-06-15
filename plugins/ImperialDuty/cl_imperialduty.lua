@@ -12,7 +12,7 @@ TriggerEvent('chat:addSuggestion', '/duty', 'Toggle your duty status for better 
     { name="JOB", help="Specify the job you want to go on-duty as or blank for off duty" },
 })
 
-RegisterCommand("duty", function(source, args)
+RegisterCommand(Config.commands.duty, function(source, args)
     local received = args[1] or nil
     local job = received and string.upper(received) or nil
     

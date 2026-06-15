@@ -14,18 +14,32 @@ local function getDiscordId(src)
     return false
 end
 
+local function decodeJsonResponse(raw, context)
+    if not raw or raw == "" then
+        print("[ImperialCAD] Empty response while decoding " .. context .. ".")
+        return nil
+    end
+
+    local ok, decoded = pcall(json.decode, raw)
+    if not ok or type(decoded) ~= "table" then
+        print("[ImperialCAD] Invalid JSON response while decoding " .. context .. ".")
+        return nil
+    end
+
+    return decoded
+end
+
 if Config.isQB then
     
     local QBCore = exports['qb-core']:GetCoreObject({'Functions'})
 
 -- Hook into the player character load event
-RegisterNetEvent('qb-multicharacter:server:loadUserData')
 AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
     local src = source
     local discordId = getDiscordId(src)
 
     if Config.debug then
-        print("✅ QBCore Load User Detected, Loading Character Data: " .. json.encode(cData) .. " | Source: " .. src)
+        print("QBCore Load User Detected, Loading Character Data: " .. json.encode(cData) .. " | Source: " .. src)
     end
 
     local charinfo = cData.charinfo
@@ -40,19 +54,19 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
     local commId = GetConvar("imperial_community_id", "")
 
     if not citizenid or citizenid == "" then
-        print("❌ ERROR: Citizen ID is missing!")
+        print("ERROR: Citizen ID is missing!")
         return
     end
 
     if not commId or commId == "" then
-        print("❌ ERROR: Community ID is missing! Check your server config.")
+        print("ERROR: Community ID is missing! Check your server config.")
         return
     end
 
     -- Check if character exists in CAD
     exports["ImperialCAD"]:GetCharacter(citizenid, commId, function(success, resultData)
         if success then 
-            print("✅ Character Data Found in CAD for CitizenID: " .. citizenid)
+            print("Character Data Found in CAD for CitizenID: " .. citizenid)
             if Config.debug then
                 print("Result Data: " .. json.encode(resultData))
             end
@@ -71,13 +85,13 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
             if Config.QBRegCurrent then -- If QBRegCurrent is true then
 
                 if Config.debug then
-            print("⚠️ Character NOT found in CAD. Creating new entry...")
+            print("Character NOT found in CAD. Creating new entry...")
                 end
 
             else -- If QBRegCurrent is not true then (false)
 
                 if Config.debug then
-            print("⚠️ Character NOT found in CAD. Will not Create new entry config is set to false")
+            print("Character NOT found in CAD. Will not Create new entry config is set to false")
                 end
 
             return end
@@ -111,12 +125,13 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
-                    print("✅ New Character Created in CAD for CitizenID: " .. citizenid)
+                    print("New Character Created in CAD for CitizenID: " .. citizenid)
                     if Config.debug then
                         print("Result Data: " .. json.encode(createResult))
                     end
 
-                    local eventdata = json.decode(createResult)
+                    local eventdata = decodeJsonResponse(createResult, "QB character create")
+                    if not eventdata or not eventdata.response then return end
 
                     local data = {
                         ssn = eventdata.response.ssn,
@@ -128,7 +143,7 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
                     TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
 
                 else
-                    print("⚠️ ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
+                    print("ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
                 end
 
             end)
@@ -141,7 +156,6 @@ AddEventHandler('qb-multicharacter:server:loadUserData', function(cData)
 end)
 
     -- Hook into the character creation event
-    RegisterNetEvent('qb-multicharacter:server:createCharacter')
     AddEventHandler('qb-multicharacter:server:createCharacter', function(cData)
         local src = source
         local discordId = getDiscordId(src)
@@ -174,7 +188,7 @@ end)
             end
 
             if Config.debug then
-            print("✅ Character Created After Delay:")
+            print("Character Created After Delay:")
             print("Citizen ID: " .. citizenid)
             print("Discord ID: " .. discordId)
             print("First Name: " .. firstname)
@@ -205,12 +219,13 @@ end)
                 citizenid = citizenid
             }, function(success, resultData)
                 if success then 
-                    print("✅ Character Created in CAD")
+                    print("Character Created in CAD")
                     if Config.debug then
                         print("Result Data: " .. json.encode(resultData))
                     end
 
-                    local eventdate = json.decode(resultData)
+                    local eventdate = decodeJsonResponse(resultData, "QB new character")
+                    if not eventdate or not eventdate.response then return end
 
                     local data = {
                         ssn = eventdate.response.ssn,
@@ -222,16 +237,15 @@ end)
                     TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
 
                 else 
-                    print("⚠️ ERROR: Could not create character in CAD.")
+                    print("ERROR: Could not create character in CAD.")
                 end
             end)
         else
-            print("⚠️ ERROR: Could not retrieve player data after delay!")
+            print("ERROR: Could not retrieve player data after delay!")
         end
     end)
 
     -- Hook into the character deletion event
-    RegisterNetEvent('qb-multicharacter:server:deleteCharacter')
     AddEventHandler('qb-multicharacter:server:deleteCharacter', function(citizenid)
         local src = source
         local discordId = getDiscordId(src)
@@ -245,16 +259,20 @@ end)
             citizenid = citizenid
         }, function(success, resultData)
             if success then 
-                print("✅ Character was deleted in CAD")
+                print("Character was deleted in CAD")
             else 
-                    print("⚠️ ERROR: Could not delete character in CAD.")
+                    print("ERROR: Could not delete character in CAD.")
             end
         end)
     end)
 
     RegisterNetEvent('ImperialCAD:QBFramework:CreateVehicle')
-    AddEventHandler('ImperialCAD:QBFramework:CreateVehicle', function(data, source)
+    AddEventHandler('ImperialCAD:QBFramework:CreateVehicle', function(data)
         local src = source
+        if type(data) ~= "table" then
+            print("[ImperialCAD] Vehicle registration skipped: missing QB vehicle data.")
+            return
+        end
         local discordId = getDiscordId(src)
         local vehicle = data.vehicle
         local plate = data.plate
@@ -262,7 +280,7 @@ end)
         local make = data.make
 
         if Config.debug then
-            print("✅ Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
+            print("Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
         end
 
         exports["ImperialCAD"]:CreateVehicle({
@@ -274,7 +292,7 @@ end)
             color = color
         }, function(success, resultData)
             if success then 
-                print("✅ Vehicle registered successfully to CAD.")
+                print("Vehicle registered successfully to CAD.")
             end
         end)
 
@@ -295,7 +313,7 @@ AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_na
     local discordId = getDiscordId(src)
 
     if Config.debug then
-        print("✅ NatFW Load User Detected, Loading Character Data: " .. json.encode(data) .. " | Source: " .. src)
+        print("NatFW Load User Detected, Loading Character Data: " .. json.encode(data) .. " | Source: " .. src)
     end
 
     local charinfo = data
@@ -310,12 +328,12 @@ AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_na
     local commId = GetConvar("imperial_community_id", "")
 
     if not citizenid or citizenid == "" then
-        print("❌ ERROR: Citizen ID is missing!")
+        print("ERROR: Citizen ID is missing!")
         return
     end
 
     if not commId or commId == "" then
-        print("❌ ERROR: Community ID is missing! Check your server config.")
+        print("ERROR: Community ID is missing! Check your server config.")
         return
     end
 
@@ -327,12 +345,12 @@ AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_na
 
     exports["ImperialCAD"]:GetCharacter(citizenid, commId, function(success, resultData)
         if success then 
-            print("✅ Character Data Found in CAD for CitizenID: " .. citizenid)
+            print("Character Data Found in CAD for CitizenID: " .. citizenid)
             if Config.debug then
                 print("Result Data: " .. json.encode(resultData))
             end
         else 
-            print("⚠️ Character NOT found in CAD. Creating new entry...")
+            print("Character NOT found in CAD. Creating new entry...")
 
             if gender == "Male" then
                 gender = "MALE"
@@ -363,12 +381,12 @@ AddEventHandler("NAT2K15:CHECKSQL", function(steam, discord, first_name, last_na
                 citizenid = citizenid
             }, function(createSuccess, createResult)
                 if createSuccess then
-                    print("✅ New Character Created in CAD for CitizenID: " .. citizenid)
+                    print("New Character Created in CAD for CitizenID: " .. citizenid)
                     if Config.debug then
                         print("Result Data: " .. json.encode(createResult))
                     end
                 else
-                    print("⚠️ ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
+                    print("ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
                 end
             end)
             
@@ -393,9 +411,9 @@ end)
             citizenid = citizenid
         }, function(success, resultData)
             if success then 
-                print("✅ Character was deleted in CAD")
+                print("Character was deleted in CAD")
             else 
-                    print("⚠️ ERROR: Could not delete character in CAD.")
+                    print("ERROR: Could not delete character in CAD.")
             end
         end)
     end)
@@ -413,7 +431,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
     local discordId = getDiscordId(src)
 
     if Config.debug then
-        print("✅ QBXCore Load User Detected, Requesting Character Data for Source: "..src)
+        print("QBXCore Load User Detected, Requesting Character Data for Source: "..src)
     end
 
     local data = exports.qbx_core:GetPlayer(source)
@@ -439,19 +457,19 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
     local commId = GetConvar("imperial_community_id", "")
 
     if not citizenid or citizenid == "" then
-        print("❌ ERROR: Citizen ID is missing!")
+        print("ERROR: Citizen ID is missing!")
         return
     end
 
     if not commId or commId == "" then
-        print("❌ ERROR: Community ID is missing! Check your server config.")
+        print("ERROR: Community ID is missing! Check your server config.")
         return
     end
 
     -- Check if character exists in CAD
     exports["ImperialCAD"]:GetCharacter(citizenid, commId, function(success, resultData)
         if success then 
-            print("✅ Character Data Found in CAD for CitizenID: " .. citizenid)
+            print("Character Data Found in CAD for CitizenID: " .. citizenid)
             if Config.debug then
                 print("Result Data: " .. json.encode(resultData))
             end
@@ -469,7 +487,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
         else 
 
                 if Config.debug then
-            print("⚠️ Character NOT found in CAD. Creating new entry...")
+            print("Character NOT found in CAD. Creating new entry...")
                 end
 
             if gender == 0 then
@@ -505,7 +523,8 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                         print("Result Data: " .. json.encode(createResult))
                     end
 
-                    local eventdata = json.decode(createResult)
+                    local eventdata = decodeJsonResponse(createResult, "QBX character create")
+                    if not eventdata or not eventdata.response then return end
 
                     local data = {
                         ssn = eventdata.response.ssn,
@@ -517,7 +536,7 @@ AddEventHandler('QBCore:Server:OnPlayerLoaded', function()
                     TriggerClientEvent('ImperialCAD:setActiveCiv', src, data)
 
                 else
-                    print("⚠️ ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
+                    print("ERROR: Failed to create character in CAD for CitizenID: " .. citizenid)
                 end
 
             end)
@@ -544,9 +563,9 @@ end)
             citizenid = citizenid
         }, function(success, resultData)
             if success then 
-                print("✅ Character was deleted in CAD")
+                print("Character was deleted in CAD")
             else 
-                    print("⚠️ ERROR: Could not delete character in CAD.")
+                    print("ERROR: Could not delete character in CAD.")
             end
         end)
     end)
@@ -581,8 +600,12 @@ end)
     end)
 
     RegisterNetEvent('ImperialCAD:QBXFramework:CreateVehicle')
-    AddEventHandler('ImperialCAD:QBXFramework:CreateVehicle', function(data, source)
+    AddEventHandler('ImperialCAD:QBXFramework:CreateVehicle', function(data)
         local src = source
+        if type(data) ~= "table" then
+            print("[ImperialCAD] Vehicle registration skipped: missing QBX vehicle data.")
+            return
+        end
         local discordId = getDiscordId(src)
         local vehicle = data.vehicle
         local plate = data.plate
@@ -590,7 +613,7 @@ end)
         local make = data.make
 
         if Config.debug then
-            print("✅ Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
+            print("Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
         end
 
         exports["ImperialCAD"]:CreateVehicle({
@@ -602,7 +625,7 @@ end)
             color = color
         }, function(success, resultData)
             if success then 
-                print("✅ Vehicle registered successfully to CAD.")
+                print("Vehicle registered successfully to CAD.")
             else
                 print("Unable to register vehicle to cad for: "..source)
             end

@@ -1,10 +1,18 @@
 local communityid = GetConvar("imperial_community_id", "")
 
-local function Notify(message)
+function Notify(message)
     local fullMessage = "[IMPERIAL] " .. message
     SetNotificationTextEntry("STRING")
     AddTextComponentString(fullMessage)
     DrawNotification(false, true)
+end
+
+function GetStoredSSN()
+    return GetResourceKvpString("civ_ssn")
+end
+
+function GetStoredName()
+    return GetResourceKvpString("civ_name")
 end
 
 AddEventHandler('playerSpawned', function()
@@ -32,7 +40,7 @@ AddEventHandler("ImperialCAD:setActiveCiv", function(data)
 
         Notify("Civilian profile activated: " .. data.name)
     else
-        Notify("Data reception error. Please check server logs.")
+        Notify("Data error. Please check server logs.")
         DeleteResourceKvp("civ_ssn")
         DeleteResourceKvp("civ_name")
         DeleteResourceKvp("civ_age")
@@ -41,7 +49,21 @@ AddEventHandler("ImperialCAD:setActiveCiv", function(data)
     end
 end)
 
-RegisterCommand("setciv", function(source, args, rawCommand)
+RegisterNetEvent("ImperialCAD:clientCivilianStatusUpdated")
+AddEventHandler("ImperialCAD:clientCivilianStatusUpdated", function(data)
+    if type(data) ~= "table" then return end
+
+    if data.status == "deleted" and data.ssn == GetResourceKvpString("civ_ssn") then
+        DeleteResourceKvp("civ_ssn")
+        DeleteResourceKvp("civ_name")
+        DeleteResourceKvp("civ_age")
+        DeleteResourceKvp("civ_address")
+        DeleteResourceKvp("commId")
+        Notify("Your active civilian profile has been deleted externally.")
+    end
+end)
+
+RegisterCommand(Config.commands.setciv, function(source, args, rawCommand)
     local ssn = args[1]
     if ssn and #ssn > 8 then
         TriggerServerEvent("ImperialCAD:getCivData", ssn)
@@ -50,7 +72,7 @@ RegisterCommand("setciv", function(source, args, rawCommand)
     end
 end, false)
 
-RegisterCommand("getciv", function(source, args, rawCommand)
+RegisterCommand(Config.commands.getciv, function()
     local name = GetResourceKvpString("civ_name")
     local age = GetResourceKvpString("civ_age")
     local commId = GetResourceKvpString("commId")
@@ -62,7 +84,7 @@ RegisterCommand("getciv", function(source, args, rawCommand)
     end
 end, false)
 
-RegisterCommand("clearciv", function(source, args, rawCommand)
+RegisterCommand(Config.commands.clearciv, function()
     DeleteResourceKvp("civ_ssn")
     DeleteResourceKvp("civ_name")
     DeleteResourceKvp("civ_age")
@@ -72,7 +94,7 @@ RegisterCommand("clearciv", function(source, args, rawCommand)
     Notify("Active civilian profile has been cleared.")
 end, false)
 
-RegisterCommand("regveh", function(source, args, rawCommand)
+RegisterCommand(Config.commands.regveh, function()
     local ped = PlayerPedId()
     if IsPedSittingInAnyVehicle(ped) then
         local ssn = GetResourceKvpString("civ_ssn")
@@ -105,18 +127,79 @@ RegisterCommand("regveh", function(source, args, rawCommand)
     end
 end, false)
 
-function GetStoredSSN()
-    return GetResourceKvpString("civ_ssn")
-end
+RegisterCommand(Config.commands.id, function()
+    local ssn = GetStoredSSN()
+
+    if not ssn or ssn == "" or ssn == "nil" then
+        Notify("No set civilian found!")
+        return
+    end
+
+    TriggerServerEvent("fetchDriverLicenseData", ssn, GetPlayerServerId(PlayerId()))
+end, false)
+
+
+RegisterCommand(Config.commands.hideid, function()
+    SendNUIMessage({ action = "hide" })
+end, false)
+
+
+RegisterCommand(Config.commands.giveid, function(source, args)
+    local ssn = GetStoredSSN()
+    if not ssn or ssn == "nil" then
+        Notify('No set civilian found!')
+        return
+    end
+
+    local playerPed = PlayerPedId()
+    local coords = GetEntityCoords(playerPed)
+    local nearestPlayer, nearestDistance = nil, 2.0
+    for _, playerId in ipairs(GetActivePlayers()) do
+        local targetPed = GetPlayerPed(playerId)
+        if targetPed ~= playerPed then
+            local targetCoords = GetEntityCoords(targetPed)
+            local distance = #(coords - targetCoords)
+            if distance < nearestDistance then
+                nearestPlayer = GetPlayerServerId(playerId)
+                nearestDistance = distance
+            end
+        end
+    end
+
+    if nearestPlayer then
+        TriggerServerEvent("giveDriverLicenseData", ssn, nearestPlayer, GetPlayerServerId(PlayerId()))
+    else
+        Notify('No players are nearby!')
+    end
+end, false)
+
+
+RegisterNetEvent("showDriverLicense")
+AddEventHandler("showDriverLicense", function(data, id)
+    local playerServerId = id
+
+    SendNUIMessage({
+        action = "show",
+        fn = data.fn,
+        ln = data.ln,
+        address = data.address,
+        dob = data.dob,
+        license_number = data.license_number or "N/A",
+        class = data.class,
+        sex = data.sex,
+        id = playerServerId
+    })
+end)
+
+Citizen.CreateThread(function()
+    while true do
+        Citizen.Wait(0)
+        -- ESC key (322) or Backspace key (177)
+        if IsControlJustReleased(0, 322) or IsControlJustReleased(0, 177) then
+            SendNUIMessage({ action = "hide" })
+        end
+    end
+end)
 
 exports('GetStoredSSN', GetStoredSSN)
-print ()
-
-
-function GetStoredName()
-    return GetResourceKvpString("civ_name")
-end
-
 exports('GetStoredName', GetStoredName)
-print ()
-

@@ -55,6 +55,7 @@ RegisterCommand('911', function(source, args)
     }
 
     TriggerServerEvent('ImperialCAD:New911', callData)
+    callTimer = Config.callCooldown or 60
     
 end, false)
 
@@ -90,6 +91,7 @@ RegisterCommand('a911', function(source, args)
     }
 
     TriggerServerEvent('ImperialCAD:New911', callData)
+    callTimer = Config.callCooldown or 60
     
 end, false)
 
@@ -105,14 +107,7 @@ RegisterCommand('rplate', function(source, args, rawCommand)
     local plate = table.concat(args, " ")
 
     if plate == nil or plate == "" then
-        print('plate not in command')
-        TriggerEvent('ox_lib:alertDialog', {
-            header = "No Last Idea",
-            content = "There is no last idea stored.",
-            centered = true,
-            cancel = false,
-            size = 'md'
-        })
+        Notify("You need to include a plate to run.")
         return
     end
 

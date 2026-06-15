@@ -66,6 +66,7 @@ Config.TsThroughChat = true
 Config.PlateThroughChat = true -- Allows users to run a plate using the /rplate command
 Config.AttachThroughChat = true
 Config.Allow911Command = true -- This will allow /a911 for Anonymous calls and /911 for normal calls that trys to send a caller based on active civ or username, if you dont need it, disable it.
+Config.callCooldown = 60 -- Seconds a player must wait before sending another 911 call.
 
 --Should a radius style blip appear on the map for new 911 calls? (This works with ImperialDuty)
 Config.callBlip = true
@@ -75,3 +76,18 @@ Config.callBlipDuration = 5 --In minutes
 Config.trafficsnature = "Traffic Stop"
 Config.trafficspriority = "3"
 Config.trafficsstatus = "ACTIVE"
+
+
+-- If you touch anything on the left of the equal sign, aka not inside of the quotes on the right you will break everything.
+-- For example; Chaning setciv to activeciv would be { setciv = "activeciv", }
+Config.commands = {
+    setciv = "setciv", -- The command to set the players active ImperialCAD character. This is used for the ID script, reg vehicle command, any other in-game char actions, and will attempt to set this as the active civilian in their imperialcad civilian panel.
+    getciv = "getciv", -- Prints all the current locally stored ImperialCAD character data
+    clearciv = "clearciv", -- CLears the current locally stored ImperialCAD character data
+    regveh = "regveh", -- Register players current vehicle to their currently locally selected ImperialCAD character
+    id = "id", -- Allows players to view their ID of their currently selected ImperialCAD character
+    hideid = "hideid", -- To hide any ID on the players screen
+    giveid = "giveid", -- Allows the player to show the closest player within 2m their currently selected ImperialCAD character
+    duty = "duty", -- Lets the FiveM resource know the user wants to enage with the cad from in-game? (idk how to word it ngl)
+    tablet = "tablet", -- How players will open the ImperialCAD Iframe tablet.
+}

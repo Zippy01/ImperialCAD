@@ -51,7 +51,7 @@ RegisterNUICallback('closeTablet', function(data, cb)
     cb({success = true, message = "Tablet closed via JavaScript"})
 end)
 
-RegisterCommand("tablet", function(source, args, rawCommand)
+RegisterCommand(Config.commands.tablet, function(source, args, rawCommand)
     local ped = GetPlayerPed(-1)
     local currentVehicle = GetVehiclePedIsIn(ped, false)
 
@@ -79,13 +79,14 @@ RegisterCommand("tablet", function(source, args, rawCommand)
         Citizen.Wait(200)
         SetNuiFocus(true, true)
         SendNUIMessage({
-            type = "DISPLAY_TABLET"
+            type   = "DISPLAY_TABLET",
+            commId = GetConvar("imperial_community_id", "")
         })
         tabletVisible = true
     end
 end, false)
 
-RegisterKeyMapping('Tablet', 'Open / close your tablet.', 'keyboard', 'PERIOD')
+RegisterKeyMapping(Config.commands.tablet, 'Open / close your tablet.', 'keyboard', 'PERIOD')
 
 Citizen.CreateThread(function()
     while true do

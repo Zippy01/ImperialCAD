@@ -2,6 +2,21 @@ if not Config.ERSsupport then return end
 
 print("Loading ImperialCAD ERS Integration..")
 
+local function decodeJsonResponse(raw, context)
+    if not raw or raw == "" then
+        if Config.debug then print("[Imperial ERS] Empty response while decoding " .. context .. ".") end
+        return nil
+    end
+
+    local ok, decoded = pcall(json.decode, raw)
+    if not ok or type(decoded) ~= "table" then
+        print("[Imperial ERS] Invalid JSON response while decoding " .. context .. ".")
+        return nil
+    end
+
+    return decoded
+end
+
 local function GetCivilianData(firstname, lastname, cb)
 
 
@@ -64,32 +79,44 @@ RegisterNetEvent('ErsIntegration::OnFirstNPCInteraction')
 AddEventHandler('ErsIntegration::OnFirstNPCInteraction', function(source, data, context)
     if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
     if Config.debug then print("Received ERS ped info", json.encode(data)) end
-    local name = data.FirstName .. " " .. data.LastName
 
     GetCivilianData(data.FirstName, data.LastName, function(pedRegistered)
 
 if not pedRegistered then 
     local pdata = data
 
-    local DLStatus = string.upper(pdata.License_Car)
-    local CDLStatus = string.upper(pdata.License_Truck)
+    local function resolveLicense(raw)
+        local upper = string.upper(raw or "")
 
-    local licenseMap = {
-    ["VALID"] = "ACTIVE",
-    ["INTERNATIONAL LICENSE (VALID)"] = "ACTIVE",
-    ["REPORTED STOLEN (VALID)"] = "REVOKED",
+        -- Extract embedded license number if present (e.g. "DL-P7JF1URC84" or "CDL-ABC123")
+        local licenseNumber = upper:match("([A-Z0-9]?[A-Z]?L%-[A-Z0-9]+)")
 
-    ["EXPIRED"] = "EXPIRED",
-    ["SUSPENDED"] = "SUSPENDED",
-    ["REVOKED"] = "REVOKED",
+        -- Classify status by keyword priority (order matters)
+        local status
+        if upper == "" or upper == "N/A" or upper == "NONE" then
+            status = "NONE"
+        elseif upper:find("REVOKED") then
+            status = "REVOKED"
+        elseif upper:find("STOLEN") then
+            status = "REVOKED"  -- treat stolen as revoked
+        elseif upper:find("SUSPENDED") then
+            status = "SUSPENDED"
+        elseif upper:find("EXPIRED") then
+            status = "EXPIRED"
+        elseif upper:find("VALID") or upper:find("INTERNATIONAL LICENSE") then
+            status = "ACTIVE"
+        else
+            status = "NONE"
+        end
 
-    ["NONE"] = "NONE",
-    ["N/A"] = "NONE",
-    [""] = "NONE",
-    }
+        return status, licenseNumber
+end
 
-    local licenseStatus = licenseMap[DLStatus] or "NONE"
-    local CLicenseStatus = licenseMap[CDLStatus] or "NONE"
+local DLStatus = pdata.License_Car or ""
+local CDLStatus = pdata.License_Truck or ""
+
+local licenseStatus, extractedDLNumber   = resolveLicense(DLStatus)
+local CLicenseStatus, extractedCDLNumber = resolveLicense(CDLStatus)
 
     NewCharacterAdvanced({
         commId = GetConvar("imperial_community_id", ""),
@@ -98,7 +125,7 @@ if not pedRegistered then
         Lname = pdata.LastName,
         Birthdate = pdata.DOB,
         gender = pdata.Gender,
-        race = string.upper(pdata.Nationality) or "nil",
+        race = string.upper(pdata.Nationality or "nil"),
         hairC = "nil", -- not provided
         eyeC = "nil", -- not provided
         height = "nil", -- not provided
@@ -157,10 +184,11 @@ AddEventHandler('ErsIntegration::OnFirstVehicleInteraction', function(source, da
     if Config.debug then print("[IMPERIAL_ERS] Received ERS vehicle info", json.encode(data)) end
     if not IsUnitOnDuty(source) then if Config.debug then print(source, "unit is not on duty with imperial ignoring ers") end return end
     
-    local fullName = data.owner_name
+    local fullName = data.owner_name or ""
 
--- Use pattern matching to split into first and last?? idk trying it tho
     local firstName, lastName = fullName:match("^(%S+)%s+(.*)$")
+    firstName = firstName or fullName
+    lastName = lastName or "Unknown"
 
     if Config.debug then
     print("[IMPERIAL_ERS] First name:", firstName)
@@ -183,7 +211,7 @@ GetVehicleData(vehicle.license_plate, function(isReg)
                     color = vehicle.color,
                     year = tostring(vehicle.build_year),
                     regStatus = regStatus,
-                    regExpDate = vehicle.registration_date,
+                    regExpDate = GenerateDate(vehicle.tax),
                     vin = GenerateRandomString(17),
                     stolen = vehicle.stolen
                 },
@@ -250,7 +278,7 @@ local crossStreet = streetData.crossStreet or nil
         priority = "2"
     }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
+            local apires = decodeJsonResponse(resultData, "ERS callout call create")
             if not apires or not apires.response or not apires.response.callId then
                 if Config.debug then print("^1[IMPERIAL_ERS_ERROR]^7 Invalid response or call ID not found") end
                 return
@@ -336,12 +364,17 @@ AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
     local Coords
 
     local vehicle = vehicleData
+    if not vehicle then
+        if Config.debug then print("[Imperial ERS] Pullover event did not include vehicle data.") end
+        return
+    end
 
     if ped and ped ~= 0 then
          Coords = GetEntityCoords(ped)
         if Config.debug then print(("Player %s coords: x=%.2f, y=%.2f, z=%.2f"):format(src, Coords.x, Coords.y, Coords.z)) end
     else
         if Config.debug then print("No ped found for player " .. src) end
+        return
     end
 
     local streetData = lib.callback.await('ImperialCAD:getNearestStreets', src, Coords)
@@ -362,7 +395,7 @@ AddEventHandler("ErsIntegration::OnPullover", function(pedData, vehicleData)
         priority = Config.trafficspriority
     }, function(success, resultData)
         if success then
-            local apires = json.decode(resultData)
+            local apires = decodeJsonResponse(resultData, "ERS pullover call create")
             if not apires or not apires.response or not apires.response.callId then
                 if Config.debug then print("^1[IMPERIAL_ERS_ERROR]^7 Invalid response or call ID not found") end
                 return

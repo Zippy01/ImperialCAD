@@ -7,17 +7,32 @@ local webhookURL = Config.WebhookURL
 
 local disabled = Config.DisableDutyCommand
 
+local function containsUnit(list, serverId)
+    for _, unitId in ipairs(list) do
+        if unitId == serverId then
+            return true
+        end
+    end
+    return false
+end
+
+local function addUnitOnce(list, serverId)
+    if not containsUnit(list, serverId) then
+        table.insert(list, serverId)
+    end
+end
+
 RegisterNetEvent("Imperial:AddUnitOnDuty")
 AddEventHandler("Imperial:AddUnitOnDuty", function(job, target)
     local serverId = target or source
-    table.insert(OnDutyUnits, serverId)
+    addUnitOnce(OnDutyUnits, serverId)
     local jobName = "Unkown"
 
     if job == "LEO" then
-        table.insert(OnDutyLEOUnits, serverId)
+        addUnitOnce(OnDutyLEOUnits, serverId)
         jobName = "Law Enforcement Officer"
     elseif job == "FIRE" then
-        table.insert(OnDutyFireUnits, serverId)
+        addUnitOnce(OnDutyFireUnits, serverId)
         jobName = "Fire/Medical"
     end
 
@@ -200,12 +215,12 @@ AddEventHandler("Imperial:AddUnitOnDutydisabled", function(serverId, job)
 
     local job = job or "Unkown"
 
-    table.insert(OnDutyUnits, serverId)
+    addUnitOnce(OnDutyUnits, serverId)
 
     if job == "LEO" then
-        table.insert(OnDutyLEOUnits, serverId)
+        addUnitOnce(OnDutyLEOUnits, serverId)
     elseif job == "FIRE" then
-        table.insert(OnDutyFireUnits, serverId)
+        addUnitOnce(OnDutyFireUnits, serverId)
     end
 
     print("Added to OnDuty Units: "..GetPlayerName(serverId).." Job: "..job)
