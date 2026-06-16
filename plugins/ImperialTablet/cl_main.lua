@@ -2,6 +2,8 @@ local tabletVisible = false
 local tabletOpening = false
 local tabletProp = nil
 
+local animDict = "amb@code_human_in_bus_passenger_idles@female@tablet@base"
+
 local function Notify(message)
     local fullMessage = "[IMPERIAL] " .. message
     SetNotificationTextEntry("STRING")
@@ -33,7 +35,7 @@ end
 AddEventHandler('onResourceStop', function(resourceName)
 
     if (GetCurrentResourceName() ~= resourceName) then
-        return
+      return
     end
 
     closeTablet()
@@ -46,7 +48,7 @@ AddEventHandler('onResourceStop', function(resourceName)
         tabletProp = nil
     end
 
-end)
+  end)
 
 RegisterNUICallback('closeTablet', function(data, cb)
     closeTablet()
@@ -66,13 +68,21 @@ RegisterCommand(Config.commands.tablet, function(source, args, rawCommand)
         return
     end
 
-    if tabletVisible or IsEntityPlayingAnim(ped, "amb@code_human_in_bus_passenger_idles@female@tablet@base", "base", 3) then
+    if tabletVisible or IsEntityPlayingAnim(ped, animDict, "base", 3) then
         closeTablet()
     else
         tabletOpening = true
 
-        RequestAnimDict("amb@code_human_in_bus_passenger_idles@female@tablet@base")
-        while not HasAnimDictLoaded("amb@code_human_in_bus_passenger_idles@female@tablet@base") do
+        RequestAnimDict(animDict)
+
+        local timeoutAt = GetGameTimer() + 5000
+        while not HasAnimDictLoaded(animDict) do
+            if GetGameTimer() > timeoutAt then
+                tabletOpening = false
+                Notify("Tablet animation failed to load. Please try again.")
+                return
+            end
+
             Citizen.Wait(100)
         end
 
@@ -89,7 +99,7 @@ RegisterCommand(Config.commands.tablet, function(source, args, rawCommand)
             true, true, false, true, 1, true
         )
 
-        TaskPlayAnim(ped, "amb@code_human_in_bus_passenger_idles@female@tablet@base", "base", 8.0, -8.0, -1, 50, 0, false, false, false)
+        TaskPlayAnim(ped, animDict, "base", 8.0, -8.0, -1, 50, 0, false, false, false)
 
         Citizen.Wait(200)
         SetNuiFocus(true, true)
