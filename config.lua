@@ -65,7 +65,7 @@ Config.WebhookURL = "WEBHOOK URL HERE" -- Webhook URL
 Config.TsThroughChat = true
 Config.PlateThroughChat = true -- Allows users to run a plate using the /rplate command
 Config.AttachThroughChat = true
-Config.Allow911Command = true -- This will allow /a911 for Anonymous calls and /911 for normal calls that trys to send a caller based on active civ or username, if you dont need it, disable it.
+Config.Allow911Command = true -- This will allow /a911 for Anonymous calls and /911 for normal calls that tries to send a caller based on active civ or username, if you dont need it, disable it. Customize the commands in the config.commands table below.
 Config.callCooldown = 60 -- Seconds a player must wait before sending another 911 call.
 
 --Should a radius style blip appear on the map for new 911 calls? (This works with ImperialDuty)
@@ -81,6 +81,8 @@ Config.trafficsstatus = "ACTIVE"
 -- If you touch anything on the left of the equal sign, aka not inside of the quotes on the right you will break everything.
 -- For example; Chaning setciv to activeciv would be { setciv = "activeciv", }
 Config.commands = {
+    emergencyCall = "911", -- The command to send a 911 call to dispatch. It will try to send a caller based on active civ or username.
+    emergencyCallAnon = "a911", -- The command to send a 911 call to dispatch anonymously.
     setciv = "setciv", -- The command to set the players active ImperialCAD character. This is used for the ID script, reg vehicle command, any other in-game char actions, and will attempt to set this as the active civilian in their imperialcad civilian panel.
     getciv = "getciv", -- Prints all the current locally stored ImperialCAD character data
     clearciv = "clearciv", -- CLears the current locally stored ImperialCAD character data
