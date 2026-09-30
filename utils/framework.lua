@@ -301,10 +301,7 @@ end)
 end
 
  -- NAT2K15 Integration
-if Config.isNAT2K15 then
-    
-    FWN = Config.resourceName
-    NAT = exports[FWN]:getServerFunctions()    
+if Config.isNAT2K15 then   
 
 -- Hook into the player character load event
 RegisterNetEvent("NAT2K15:CHECKSQL")
