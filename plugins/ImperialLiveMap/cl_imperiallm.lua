@@ -7,6 +7,8 @@ local tracking = false
 
 RegisterNetEvent('ImperialCAD:livemap:client:ToggleTracking', function(Atracking)
     tracking = Atracking
+
+    Notify("Live Map tracking is now " .. (tracking and "~g~enabled" or "~r~disabled") .. "~w~.")
 end)
 
 TriggerEvent('chat:addSuggestion', '/ToggleTracking', 'Toggle ImperialCAD live tracking')
@@ -14,11 +16,11 @@ TriggerEvent('chat:addSuggestion', '/ToggleTracking', 'Toggle ImperialCAD live t
 RegisterCommand("ToggleTracking", function()
     if tracking then
         tracking = false
-        if Config.debug then print("Tracking disabled") end
     else 
         tracking = true
-         if Config.debug then print("Tracking enabled") end
     end
+    
+    Notify("Live Map tracking is now " .. (tracking and "~g~enabled" or "~r~disabled") .. "~w~.")
 end, false)
 
 CreateThread(function()

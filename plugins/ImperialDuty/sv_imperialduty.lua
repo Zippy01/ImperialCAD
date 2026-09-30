@@ -61,7 +61,9 @@ AddEventHandler("Imperial:AddUnitOnDuty", function(job, target)
         end, 'POST', json.encode(webhookData), { ['Content-Type'] = 'application/json' })
     end
 
-    print("Added to OnDuty Units: "..GetPlayerName(serverId).." Job: "..job)
+    if Config.debug then
+         print("Added to OnDuty Units: "..GetPlayerName(serverId).." Job: "..job)
+    end
 end)
 
 RegisterNetEvent("Imperial:RemoveUnitOnDuty")
@@ -119,7 +121,9 @@ AddEventHandler("Imperial:RemoveUnitOnDuty", function(job, target)
         end, 'POST', json.encode(webhookData), { ['Content-Type'] = 'application/json' })
     end
 
-    print("Removed from OnDuty Units: " .. GetPlayerName(serverId))
+    if Config.debug then
+        print("Removed from OnDuty Units: " .. GetPlayerName(serverId))
+    end
 end)
 
 RegisterNetEvent("playerDropped")
@@ -155,7 +159,9 @@ AddEventHandler("playerDropped", function(reason)
         end
     end
 
-    print("[ImperialDuty] Player " .. serverId .. " disconnected. Removed from duty: " .. jobName)
+    if Config.debug then
+        print("[ImperialDuty] Player " .. serverId .. " disconnected. Removed from duty: " .. jobName)
+    end
 
     if sendWebhook and jobType then
         local webhookData = {
@@ -174,6 +180,7 @@ AddEventHandler("playerDropped", function(reason)
                 print("^1[ImperialDuty] Error sending webhook: HTTP " .. tostring(err) .. "^0")
                 if text then print("^1[ImperialDuty] Response: " .. text .. "^0") end
             else
+
                 print("^2[ImperialDuty] Disconnection webhook sent successfully.^0")
             end
         end, 'POST', json.encode(webhookData), { ['Content-Type'] = 'application/json' })

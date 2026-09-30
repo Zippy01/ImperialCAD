@@ -120,7 +120,10 @@ RegisterCommand('rplate', function(source, args, rawCommand)
     end
 
     TriggerServerEvent('ImperialCAD:CheckPlate', callData)
-    print("[Rplate] Sent a plate check to the server side.")
+
+    if Config.debug then
+        print("[Rplate] Sent a plate check to the server side.")
+    end
 end, false)
 end
 
@@ -138,13 +141,17 @@ RegisterCommand('panic', function()
  if isPanic then
     isPanic = false
 
-    print("[Imperial-Panic] Clearing panic, Panic was true")
+    if Config.debug then
+        print("[Imperial-Panic] Clearing panic, Panic was true")
+    end
 
     TriggerServerEvent('ImperialCAD:ClearPanic', callData)
  else
     isPanic = true
 
-    print("[Imperial-Panic] Triggering panic, Panic was false")
+    if Config.debug then
+        print("[Imperial-Panic] Triggering panic, Panic was false")
+    end
 
     TriggerServerEvent('ImperialCAD:Panic', callData)
  end
@@ -241,9 +248,14 @@ AddEventHandler("Imperial:911BlipForOnduty", function(coords)
         Citizen.Wait(Config.callBlipDuration * 60000)
         if blips[blipId] then
             if blips[blipId].radiusBlip then RemoveBlip(blips[blipId].radiusBlip) end
+            
             if blips[blipId].coordBlip then RemoveBlip(blips[blipId].coordBlip) end
+            
             blips[blipId] = nil
-            if Config.debug then print("Blip ID " .. blipId .. " has been automatically removed after 5 minutes.") end
+            
+            if Config.debug then 
+                print("Blip ID " .. blipId .. " has been automatically removed after 5 minutes.") 
+            end
         end
     end)
 end)
@@ -253,5 +265,6 @@ lib.callback.register('ImperialCAD:getNearestStreets', function(coords)
     local street = GetStreetNameFromHashKey(streetHash)
     local crossStreet = GetStreetNameFromHashKey(crossStreetHash)
     local response = {street = street, crossStreet = crossStreet}
+    
     return response
 end)

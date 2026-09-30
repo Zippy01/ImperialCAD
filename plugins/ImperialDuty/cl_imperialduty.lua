@@ -9,7 +9,7 @@ local disabled = Config.DisableDutyCommand
 if disabled then return end
 
 TriggerEvent('chat:addSuggestion', '/duty', 'Toggle your duty status for better ImperialCAD notifications', {
-    { name="JOB", help="Specify the job you want to go on-duty as or blank for off duty" },
+    { name="JOB", help="Specify the job you want to go on-duty as or blank for off duty (LEO or FIRE)" },
 })
 
 RegisterCommand(Config.commands.duty, function(source, args)
@@ -24,13 +24,17 @@ RegisterCommand(Config.commands.duty, function(source, args)
         TriggerEvent("Imperial:Client:UnSuitUnit")
 
     else
-        print(received, job)
+        if Config.debug then
+            print("[Imperial Duty] Duty Command: Received: " .. tostring(received) .. ", Job: " .. tostring(job))
+        end
+
         if received == nil or (job ~= "LEO" and job ~= "FIRE") then
             ShowNotification("You need to specify a valid job. (LEO or FIRE)", "Imperial Duty")
             return
         end
 
         onduty = true
+
         TriggerServerEvent("Imperial:AddUnitOnDuty", job)
         TriggerEvent('Imperial:Client:SuitNewUnit', job)
         ShowNotification("You are now ~g~on-duty~w~.", job)

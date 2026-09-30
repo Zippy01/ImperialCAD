@@ -377,7 +377,8 @@ end)
 
 RegisterNetEvent('ImperialCAD:AttachCall')
 AddEventHandler('ImperialCAD:AttachCall', function(callData)
-local player = source
+    local player = source
+    
     if type(callData) ~= "table" or not callData.callnum then
         Notify("[Attach] Missing call number", player)
         return
@@ -388,10 +389,14 @@ local player = source
         callnum = callData.callnum
     }, function(success, resultData)
         local result = decodeJsonResponse(resultData, "attach call")
+
         if not result then
+            print("^1[ImperialCAD API ERROR]^7 Attach command failed for " .. GetPlayerName(player) .. " due to invalid CAD response.")
+
             Notify("[Attach] Unable to attach you, invalid CAD response", player)
             return
         end
+
         local status = result.status
         local message = result.message
         local response = result.response
@@ -407,6 +412,10 @@ local player = source
         end
         
         if not success then
+            if message == "Invalid Community" then
+                print("^1[ImperialCAD API ERROR]^7 Attach command failed for " .. GetPlayerName(player) .. " due to invalid community ID or API key. Check that your imperial_community_id and imperialAPI convars in your server.cfg are correct.")
+            end
+
             Notify(string.format("[Attach] Unable to attach you, reason: %s", status), player)
         elseif success and response and response.callnum then
             Notify("[Attach] Attached to call number "..response.callnum, player)
