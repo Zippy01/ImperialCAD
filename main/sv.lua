@@ -177,14 +177,23 @@ AddEventHandler('ImperialCAD:New911', function(callData)
 
             TriggerClientEvent('ImperialCAD:Client:Notify', player, "Your call was successfully sent to emergency services.")
 
-            else
+        else
 
-                TriggerClientEvent('ImperialCAD:Client:Notify', player, "Looks like dispatch is having trouble, We let officers know tho.")
-                TriggerEvent('Imperial:911ChatMessage', callData.name, callData.street, callData.info, callData.crossStreet, callData.postal)
-                    if Config.callBlip then
-                        TriggerEvent("ImperialCAD:911Blip", coords)
-                    end
+            TriggerClientEvent('ImperialCAD:Client:Notify', player, "Looks like dispatch is having trouble, We let officers know tho.")
+            TriggerEvent('Imperial:911ChatMessage', callData.name, callData.street, callData.info, callData.crossStreet, callData.postal)
+            
+            if Config.callBlip then
+                TriggerEvent("ImperialCAD:911Blip", coords)
             end
+
+            local ok, decoded = pcall(json.decode, resultData)
+
+            if ok and decoded and decoded.message == "Invalid Community" then
+                print("^1[ImperialCAD API_ERROR]^7 Error creating 911 call: Invalid Community ID or API Key, Please check your imperial_community_id and imperialAPI convars in your server.cfg")
+            else
+                print("^1[ImperialCAD API_ERROR]^7 911 Call failed to create, Reason: " .. resultData)
+            end
+        end
     end)
 end)
 

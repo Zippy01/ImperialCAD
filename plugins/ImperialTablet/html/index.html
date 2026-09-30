@@ -54,6 +54,20 @@
             gap: 4px;
         }
 
+        .refresh-btn {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(180, 200, 255, 0.6);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 3px;
+            padding: 2px 7px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            line-height: 1.4;
+        }
+
         .size-btn {
             font-family: 'Courier New', monospace;
             font-size: 10px;
@@ -354,6 +368,7 @@
     <div class="drag-bar" id="dragBar">
         <span class="drag-bar-title">ImperialCAD</span>
         <div class="drag-bar-controls">
+            <button class="refresh-btn">REFRESH</button>
             <button class="size-btn" data-preset="sm">SM</button>
             <button class="size-btn" data-preset="md">MD</button>
             <button class="size-btn" data-preset="lg">LG</button>

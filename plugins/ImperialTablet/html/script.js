@@ -15,6 +15,7 @@ const PRESETS = {
 
 const monitor  = document.getElementById('monitor');
 const dragBar  = document.getElementById('dragBar');
+const screen   = monitor.querySelector('.screen');
 const handles  = document.querySelectorAll('.resize-handle');
 
 let tabletVisible = false;
@@ -138,6 +139,14 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
+dragBar.querySelectorAll('.refresh-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+
+        screen.contentWindow.location.reload();
+    });
+});
+
 dragBar.querySelectorAll('.size-btn').forEach(btn => {
     btn.addEventListener('click', function (e) {
         e.stopPropagation(); // don't trigger drag
@@ -159,7 +168,7 @@ dragBar.querySelectorAll('.size-btn').forEach(btn => {
 });
 
 dragBar.addEventListener('mousedown', function (e) {
-    if (e.target.classList.contains('size-btn')) return;
+    if (e.target.classList.contains('size-btn') || e.target.classList.contains('refresh-btn')) return;
     e.preventDefault();
 
     interaction = {
