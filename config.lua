@@ -34,8 +34,8 @@ Config.cadkickonleave = true
 --simply requires them to do /verify to ensure there discord ID matches a verified account within ImperialCAD
 Config.requireVerify = false -- NOT FINISHED
 
--- This will determine how often ImperialLocation will update each users current postal, city, and county for ImperialCAD API calls. (Only change this if you are experincing performance issues.) 
-Config.locationFrequency = 2000
+-- This will determine how often (in seconds) ImperialLocation will update each users current postal, city, and county for ImperialCAD API calls. (Only change this if you are experincing performance issues.) 
+Config.locationFrequency = 10
 
 Config.DisableDutyCommand = false -- Enabling this basically just listens for its events to mark users duty for in-game notis and prevents our command from registering
 

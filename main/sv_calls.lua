@@ -17,12 +17,12 @@ function getCall(src)
 end
 
 function removeCall(src)
-    if Config.deubg then print('[ImperialCAD_calls] Removing call '..callsBySrc[src]..' from player '..src) end
+    if Config.debug then print('[ImperialCAD_calls] Removing call '..callsBySrc[src]..' from player '..src) end
     callsBySrc[src] = nil
 end
 
 AddEventHandler('playerDropped', function()
-    if Config.deubg then print('[ImperialCAD_calls] Player dropped, clearing last stored call') end
+    if Config.debug then print('[ImperialCAD_calls] Player dropped, clearing last stored call') end
     callsBySrc[source] = nil
 end)
 

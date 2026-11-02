@@ -31,7 +31,8 @@ AddEventHandler('qb-vehicleshop:client:buyShowroomVehicle', function(vehicleMode
             make = makeName or "UNKNOWN",
             color = colorName or "UNKNOWN",
             vehicle = vehicleModelName,
-            plate = plate
+            plate = plate,
+            year = GetVehicleMakeYear(vehicleModelName) or "UNKNOWN"
         }
 
         if Config.debug then

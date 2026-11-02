@@ -116,11 +116,13 @@ RegisterKeyMapping(Config.commands.tablet, 'Open / close your tablet.', 'keyboar
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
-        if IsControlJustReleased(0, 200) then
-            if tabletVisible then
+        if tabletVisible then
+            Citizen.Wait(0)
+            if IsControlJustReleased(0, 200) then
                 closeTablet()
             end
+        else
+            Citizen.Wait(500)
         end
     end
 end)

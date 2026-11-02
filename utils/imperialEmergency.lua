@@ -106,7 +106,7 @@ function Create911Call(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/911", data, headers, callback)
     
@@ -124,7 +124,7 @@ function DeleteCall(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallDelete", data, headers, callback)
 
@@ -150,7 +150,7 @@ function CreateCall(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/CallCreate", data, headers, callback)
 
@@ -168,7 +168,7 @@ function AttachCall(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/AttachCall", data, headers, callback)
 
@@ -186,7 +186,7 @@ function NewCallNote(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/callnote", data, headers, callback)
 
@@ -203,7 +203,7 @@ function Booter(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     if Config.debug then
     print("Discord ID:" .. data.users_discordID .. "Community ID:" .. data.commId)
@@ -226,7 +226,7 @@ function Panic(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/panic", data, headers, callback)
 
@@ -242,7 +242,7 @@ function ClearPanic(callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/clearpanic", data, headers, callback)
 
@@ -266,7 +266,7 @@ function CheckPlate(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/checkplate", requestData, headers, callback)
 
@@ -289,7 +289,7 @@ function GetUnit(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/GetUnit", data, headers, callback)
 

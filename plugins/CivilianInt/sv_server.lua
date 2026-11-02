@@ -18,7 +18,7 @@ AddEventHandler("ImperialCAD:getCivData", function(ssn)
     local src = source
     local headers = {
         ["Content-Type"] = "application/json", 
-        ["APIKEY"] = GetConvar("imperialAPI", ""), 
+        ["APIKEY"] = ImperialAPI, 
     }
     local url = "https://imperialcad.app/api/1.1/wf/getcivdata"
     local data = {
@@ -57,7 +57,7 @@ RegisterNetEvent("ImperialCAD:registerVehicleToCAD")
 AddEventHandler("ImperialCAD:registerVehicleToCAD", function(ssn, vehicleModelName, plate, colorName, makeName, year)
     local src = source
     local commId = GetConvar("imperial_community_id", "")
-    local apiKey = GetConvar("imperialAPI", "")
+    local apiKey = ImperialAPI
 
     if not commId or commId == "" then
         TriggerClientEvent("notify", src, "Community ID is not set. Cannot proceed with registration.")
@@ -106,7 +106,7 @@ AddEventHandler("fetchDriverLicenseData", function(ssn, playerId)
 
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", ""),
+        ["APIKEY"] = ImperialAPI,
     }
 
     local url = "https://imperialcad.app/api/1.1/wf/getLicenseData"
@@ -142,7 +142,7 @@ AddEventHandler("giveDriverLicenseData", function(ssn, nearestPlayer, sourcePlay
 
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", ""),
+        ["APIKEY"] = ImperialAPI,
     }
 
     local commId = GetConvar("imperial_community_id", "")

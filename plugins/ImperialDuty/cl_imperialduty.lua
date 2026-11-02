@@ -24,7 +24,9 @@ RegisterCommand(Config.commands.duty, function(source, args)
         TriggerEvent("Imperial:Client:UnSuitUnit")
 
     else
-        print(received, job)
+        if Config.debug then
+            print(received, job)
+        end
         if received == nil or (job ~= "LEO" and job ~= "FIRE") then
             ShowNotification("You need to specify a valid job. (LEO or FIRE)", "Imperial Duty")
             return

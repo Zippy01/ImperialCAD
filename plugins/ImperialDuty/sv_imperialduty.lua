@@ -1,39 +1,49 @@
 local OnDutyUnits = {}
 local OnDutyLEOUnits = {}
 local OnDutyFireUnits = {}
+local OnDutyLookup = {}
+local OnDutyLEOLookup = {}
+local OnDutyFireLookup = {}
+local UnitJob = {}
 
 local sendWebhook = Config.SendWebhook
 local webhookURL = Config.WebhookURL
 
 local disabled = Config.DisableDutyCommand
 
-local function containsUnit(list, serverId)
-    for _, unitId in ipairs(list) do
-        if unitId == serverId then
-            return true
-        end
+local function addUnitOnce(list, lookup, serverId)
+    if not lookup[serverId] then
+        table.insert(list, serverId)
+        lookup[serverId] = true
     end
-    return false
 end
 
-local function addUnitOnce(list, serverId)
-    if not containsUnit(list, serverId) then
-        table.insert(list, serverId)
+local function removeUnit(list, lookup, serverId)
+    if not lookup[serverId] then return end
+
+    lookup[serverId] = nil
+    for i, unitId in ipairs(list) do
+        if unitId == serverId then
+            table.remove(list, i)
+            break
+        end
     end
 end
 
 RegisterNetEvent("Imperial:AddUnitOnDuty")
 AddEventHandler("Imperial:AddUnitOnDuty", function(job, target)
     local serverId = target or source
-    addUnitOnce(OnDutyUnits, serverId)
+    addUnitOnce(OnDutyUnits, OnDutyLookup, serverId)
     local jobName = "Unkown"
 
     if job == "LEO" then
-        addUnitOnce(OnDutyLEOUnits, serverId)
+        addUnitOnce(OnDutyLEOUnits, OnDutyLEOLookup, serverId)
         jobName = "Law Enforcement Officer"
+        UnitJob[serverId] = "LEO"
     elseif job == "FIRE" then
-        addUnitOnce(OnDutyFireUnits, serverId)
+        addUnitOnce(OnDutyFireUnits, OnDutyFireLookup, serverId)
         jobName = "Fire/Medical"
+        UnitJob[serverId] = "FIRE"
     end
 
     if sendWebhook then
@@ -67,32 +77,19 @@ end)
 RegisterNetEvent("Imperial:RemoveUnitOnDuty")
 AddEventHandler("Imperial:RemoveUnitOnDuty", function(job, target)
     local serverId = target or source
+    job = job or UnitJob[serverId]
     local jobName = "Unkown" 
 
-    for i, unitId in ipairs(OnDutyUnits) do
-        if unitId == serverId then
-            table.remove(OnDutyUnits, i)
-            break
-        end
-    end
+    removeUnit(OnDutyUnits, OnDutyLookup, serverId)
 
     if job == "LEO" then
             jobName = "Law Enforcement Officer"
-        for i, unitId in ipairs(OnDutyLEOUnits) do
-            if unitId == serverId then
-                table.remove(OnDutyLEOUnits, i)
-                break
-            end
-        end
+        removeUnit(OnDutyLEOUnits, OnDutyLEOLookup, serverId)
     elseif job == "FIRE" then
             jobName = "Fire/Medical"
-        for i, unitId in ipairs(OnDutyFireUnits) do
-            if unitId == serverId then
-                table.remove(OnDutyFireUnits, i)
-                break
-            end
-        end
+        removeUnit(OnDutyFireUnits, OnDutyFireLookup, serverId)
     end
+    UnitJob[serverId] = nil
 
     if sendWebhook then
         local playerName = GetPlayerName(serverId)
@@ -127,33 +124,23 @@ AddEventHandler("playerDropped", function(reason)
     local serverId = source
     local playerName = GetPlayerName(serverId)
 
-    for i, unitId in ipairs(OnDutyUnits) do
-        if unitId == serverId then
-            table.remove(OnDutyUnits, i)
-            break
-        end
-    end
-
     local jobName = "Unknown"
     local jobType = nil
 
-    for i, unitId in ipairs(OnDutyLEOUnits) do
-        if unitId == serverId then
-            table.remove(OnDutyLEOUnits, i)
-            jobName = "Law Enforcement Officer"
-            jobType = "LEO"
-            break
-        end
+    if OnDutyLEOLookup[serverId] then
+        jobName = "Law Enforcement Officer"
+        jobType = "LEO"
     end
 
-    for i, unitId in ipairs(OnDutyFireUnits) do
-        if unitId == serverId then
-            table.remove(OnDutyFireUnits, i)
-            jobName = "Fire/Medical"
-            jobType = "FIRE"
-            break
-        end
+    if OnDutyFireLookup[serverId] then
+        jobName = "Fire/Medical"
+        jobType = "FIRE"
     end
+
+    removeUnit(OnDutyUnits, OnDutyLookup, serverId)
+    removeUnit(OnDutyLEOUnits, OnDutyLEOLookup, serverId)
+    removeUnit(OnDutyFireUnits, OnDutyFireLookup, serverId)
+    UnitJob[serverId] = nil
 
     print("[ImperialDuty] Player " .. serverId .. " disconnected. Removed from duty: " .. jobName)
 
@@ -181,12 +168,7 @@ AddEventHandler("playerDropped", function(reason)
 end)
 
 function IsUnitOnDuty(serverId)
-    for _, unitId in ipairs(OnDutyUnits) do
-        if unitId == serverId then
-            return true
-        end
-    end
-    return false
+    return OnDutyLookup[serverId] == true
 end
 
 
@@ -215,12 +197,14 @@ AddEventHandler("Imperial:AddUnitOnDutydisabled", function(serverId, job)
 
     local job = job or "Unkown"
 
-    addUnitOnce(OnDutyUnits, serverId)
+    addUnitOnce(OnDutyUnits, OnDutyLookup, serverId)
 
     if job == "LEO" then
-        addUnitOnce(OnDutyLEOUnits, serverId)
+        addUnitOnce(OnDutyLEOUnits, OnDutyLEOLookup, serverId)
+        UnitJob[serverId] = "LEO"
     elseif job == "FIRE" then
-        addUnitOnce(OnDutyFireUnits, serverId)
+        addUnitOnce(OnDutyFireUnits, OnDutyFireLookup, serverId)
+        UnitJob[serverId] = "FIRE"
     end
 
     print("Added to OnDuty Units: "..GetPlayerName(serverId).." Job: "..job)
@@ -230,35 +214,20 @@ RegisterNetEvent("Imperial:RemoveUnitOnDutydisabled")
 AddEventHandler("Imperial:RemoveUnitOnDutydisabled", function(serverId, job)
 
     local job = job or "Unkown"
+    job = job ~= "Unkown" and job or UnitJob[serverId]
     
-    for i, unitId in ipairs(OnDutyUnits) do
-
-        if unitId == serverId then
-            table.remove(OnDutyUnits, i)
-            break
-        end
-
-    end
+    removeUnit(OnDutyUnits, OnDutyLookup, serverId)
 
     if job == "LEO" then
 
-        for i, unitId in ipairs(OnDutyLEOUnits) do
-            if unitId == serverId then
-                table.remove(OnDutyLEOUnits, i)
-                break
-            end
-        end
+        removeUnit(OnDutyLEOUnits, OnDutyLEOLookup, serverId)
 
     elseif job == "FIRE" then
 
-        for i, unitId in ipairs(OnDutyFireUnits) do
-            if unitId == serverId then
-                table.remove(OnDutyFireUnits, i)
-                break
-            end
-        end
+        removeUnit(OnDutyFireUnits, OnDutyFireLookup, serverId)
 
     end
+    UnitJob[serverId] = nil
 
     print("Removed from OnDuty Units: " .. GetPlayerName(serverId))
 

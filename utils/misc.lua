@@ -23,13 +23,26 @@ function GenerateDate(future)
 end
 
 --trys to find the discord ID
+local discordIdCache = {}
+
 function getDiscordId(src)
     if src == nil then return false end
+
+    if discordIdCache[src] then
+        return discordIdCache[src]
+    end
+
     local identifiers = GetPlayerIdentifiers(src)
     for _, v in pairs(identifiers) do
         if string.sub(v, 1, 8) == "discord:" then
-            return string.gsub(v, "discord:", "")
+            local discordId = string.gsub(v, "discord:", "")
+            discordIdCache[src] = discordId
+            return discordId
         end
     end
     return false
 end
+
+AddEventHandler('playerDropped', function()
+    discordIdCache[source] = nil
+end)

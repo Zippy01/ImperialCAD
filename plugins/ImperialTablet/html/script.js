@@ -46,11 +46,11 @@ function clampLayout() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    layout.w = Math.max(MIN_W, Math.min(layout.w, vw));
-    layout.h = Math.max(MIN_H, Math.min(layout.h, vh - DRAG_BAR_H));
+    layout.w = Math.round(Math.max(MIN_W, Math.min(layout.w, vw)));
+    layout.h = Math.round(Math.max(MIN_H, Math.min(layout.h, vh - DRAG_BAR_H)));
 
-    layout.left = Math.max(0, Math.min(layout.left, vw - layout.w));
-    layout.top  = Math.max(DRAG_BAR_H, Math.min(layout.top, vh - layout.h));
+    layout.left = Math.round(Math.max(0, Math.min(layout.left, vw - layout.w)));
+    layout.top  = Math.round(Math.max(DRAG_BAR_H, Math.min(layout.top, vh - layout.h)));
 }
 
 function applyLayout() {
@@ -115,6 +115,9 @@ function showTablet() {
 }
 
 function hideTablet() {
+    interaction = null;
+    monitor.classList.remove('interacting');
+
     monitor.style.display = 'none';
     dragBar.style.display = 'none';
     handles.forEach(h => h.style.display = 'none');
@@ -188,8 +191,21 @@ handles.forEach(handle => {
     });
 });
 
+function endInteraction() {
+    if (!interaction) return;
+
+    monitor.classList.remove('interacting');
+    saveLayout();
+    interaction = null;
+}
+
 document.addEventListener('mousemove', function (e) {
     if (!interaction) return;
+
+    if (e.buttons === 0) {
+        endInteraction();
+        return;
+    }
 
     const dx = e.clientX - interaction.startX;
     const dy = e.clientY - interaction.startY;
@@ -224,10 +240,6 @@ document.addEventListener('mousemove', function (e) {
     applyLayout();
 });
 
-document.addEventListener('mouseup', function () {
-    if (!interaction) return;
-
-    monitor.classList.remove('interacting');
-    saveLayout();
-    interaction = null;
-});
+document.addEventListener('mouseup', endInteraction);
+window.addEventListener('blur', endInteraction);
+document.documentElement.addEventListener('mouseleave', endInteraction);

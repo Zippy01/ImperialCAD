@@ -1,15 +1,30 @@
 local currentPostal, currentCity, currentCounty
+local lastCoords = nil
+local lastSend = 0
 
-local function updateLocationData()
-    local playerPed = PlayerPedId()
-    local playerCoords = GetEntityCoords(playerPed)
-    TriggerServerEvent('ImperialLocation:updateNearest', {x = playerCoords.x, y = playerCoords.y})
-end
+local minMoveDistance = 20.0
+local maxRefreshMs = Config.locationFrequency * 1000
 
-Citizen.CreateThread(function()
+CreateThread(function()
     while true do
-        updateLocationData()
-        Citizen.Wait(Config.locationFrequency)
+        Wait(1000)
+
+        local ped = PlayerPedId()
+        local pedCoords = GetEntityCoords(ped)
+        local currentTimer = GetGameTimer()
+
+        local movedEnough = not lastCoords or #(pedCoords - lastCoords) >= minMoveDistance
+        local timedOut = (currentTimer - lastSend) >= maxRefreshMs
+
+        if movedEnough or timedOut then
+            lastCoords = pedCoords
+            lastSend = currentTimer
+
+            TriggerServerEvent('ImperialLocation:updateNearest', {
+                x = pedCoords.x,
+                y = pedCoords.y
+            })
+        end
     end
 end)
 

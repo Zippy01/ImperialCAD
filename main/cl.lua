@@ -7,6 +7,7 @@ local callTimer = 0
 local blips = {}
 local isPanic = false
 
+if Config.Allow911Command then
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1000)
@@ -15,6 +16,7 @@ Citizen.CreateThread(function()
         end
     end
 end)
+end
 
 if Config.Allow911Command then
 TriggerEvent('chat:addSuggestion', '/911', 'Call Emergency Services', {
@@ -120,7 +122,9 @@ RegisterCommand('rplate', function(source, args, rawCommand)
     end
 
     TriggerServerEvent('ImperialCAD:CheckPlate', callData)
-    print("[Rplate] Sent a plate check to the server side.")
+    if Config.debug then
+        print("[Rplate] Sent a plate check to the server side.")
+    end
 end, false)
 end
 
@@ -138,13 +142,17 @@ RegisterCommand('panic', function()
  if isPanic then
     isPanic = false
 
-    print("[Imperial-Panic] Clearing panic, Panic was true")
+    if Config.debug then
+        print("[Imperial-Panic] Clearing panic, Panic was true")
+    end
 
     TriggerServerEvent('ImperialCAD:ClearPanic', callData)
  else
     isPanic = true
 
-    print("[Imperial-Panic] Triggering panic, Panic was false")
+    if Config.debug then
+        print("[Imperial-Panic] Triggering panic, Panic was false")
+    end
 
     TriggerServerEvent('ImperialCAD:Panic', callData)
  end

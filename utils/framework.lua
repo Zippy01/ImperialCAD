@@ -278,6 +278,7 @@ end)
         local plate = data.plate
         local color = data.color
         local make = data.make
+        local year = data.year
 
         if Config.debug then
             print("Vehicle purchase recevied: " .. vehicle .. " Purchased by " .. data.ssn .. " | Plate: " .. plate .. " Color is " .. color .. " | make is " .. make)
@@ -287,7 +288,7 @@ end)
             ssn = data.ssn,
             model = data.vehicle,
             plate = data.plate,
-            year = "2015",
+            year = year or "2015",
             make = make,
             color = color
         }, function(success, resultData)

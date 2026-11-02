@@ -147,7 +147,7 @@ function NewCharacter(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/NewCharacter", "POST", requestData, headers, callback)
     
@@ -195,7 +195,7 @@ function NewCharacterAdvanced(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/NewAdvancedCharacter", "POST", requestData, headers, callback)
     
@@ -212,7 +212,7 @@ function DeleteCharacter(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/DeleteCharacter", "POST", requestData, headers, callback)
     
@@ -323,7 +323,7 @@ function CreateVehicle(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/registerVehicle", "POST", requestData, headers, callback)
     
@@ -340,7 +340,7 @@ function SetActiveCiv(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/setActiveCivilian", "POST", requestData, headers, callback)
     
@@ -380,7 +380,7 @@ function CreateVehicleAdvanced(data, callback)
     }
     local headers = {
         ["Content-Type"] = "application/json",
-        ["APIKEY"] = GetConvar("imperialAPI", "")
+        ["APIKEY"] = ImperialAPI
     }
     performAPIRequest("https://imperialcad.app/api/1.1/wf/registeradvancedvehicle", "POST", requestData, headers, callback)
     

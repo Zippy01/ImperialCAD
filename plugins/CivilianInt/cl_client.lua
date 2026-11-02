@@ -1,10 +1,18 @@
 local communityid = GetConvar("imperial_community_id", "")
+local idVisible = false
 
 function Notify(message)
     local fullMessage = "[IMPERIAL] " .. message
     SetNotificationTextEntry("STRING")
     AddTextComponentString(fullMessage)
     DrawNotification(false, true)
+end
+
+local function HideDriverLicense()
+    if not idVisible then return end
+
+    idVisible = false
+    SendNUIMessage({ action = "hide" })
 end
 
 function GetStoredSSN()
@@ -140,7 +148,7 @@ end, false)
 
 
 RegisterCommand(Config.commands.hideid, function()
-    SendNUIMessage({ action = "hide" })
+    HideDriverLicense()
 end, false)
 
 
@@ -189,14 +197,19 @@ AddEventHandler("showDriverLicense", function(data, id)
         sex = data.sex,
         id = playerServerId
     })
+    idVisible = true
 end)
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
-        -- ESC key (322) or Backspace key (177)
-        if IsControlJustReleased(0, 322) or IsControlJustReleased(0, 177) then
-            SendNUIMessage({ action = "hide" })
+        if idVisible then
+            Citizen.Wait(0)
+            -- ESC key (322) or Backspace key (177)
+            if IsControlJustReleased(0, 322) or IsControlJustReleased(0, 177) then
+                HideDriverLicense()
+            end
+        else
+            Citizen.Wait(500)
         end
     end
 end)
